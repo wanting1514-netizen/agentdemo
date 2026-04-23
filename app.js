@@ -3,6 +3,8 @@ const credentials = {
   teacher_demo: { password: "ChangYu2026!", role: "teacher" },
 };
 
+const PROJECT_NAME = "问衡";
+
 const samples = {
   high: {
     label: "高风险病例",
@@ -2653,7 +2655,7 @@ function updateTeacherReport(summary) {
     systemLevel,
   });
   trainingReport.textContent = [
-    `项目：炎肠智训`,
+    `项目：${PROJECT_NAME}`,
     `训练状态：${summary}`,
     `学生判断：${selected}`,
     `系统分层：${systemLevel}`,
@@ -3917,7 +3919,7 @@ function renderReviewForSubmission(submissionId) {
   teacherAvgScore.textContent = `${sub.rubricAvg || 0} 分`;
   teacherFocus.textContent = sub.weakness || "待教师复盘";
   trainingReport.textContent = [
-    "项目：炎肠智训",
+    `项目：${PROJECT_NAME}`,
     `提交类型：真实考试提交`,
     `考试：${sub.examTitle || "考试任务"}`,
     `班级：${sub.examClassName || "未绑定班级"}`,
@@ -3994,7 +3996,7 @@ function renderReviewForStudent(studentId) {
     systemLevel: student.systemLevel,
   });
   trainingReport.textContent = [
-    `项目：炎肠智训`,
+    `项目：${PROJECT_NAME}`,
     `班级：${klass.name}`,
     `学生：${student.name}`,
     `最近训练时间：${student.lastTime}`,
