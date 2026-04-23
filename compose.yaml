@@ -1,0 +1,10 @@
+services:
+  yanchang-demo:
+    build: .
+    container_name: yanchang-demo
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      YANCHANG_MODEL_API_URL: ${YANCHANG_MODEL_API_URL:-}
+      YANCHANG_PATIENT_API_URL: ${YANCHANG_PATIENT_API_URL:-}
