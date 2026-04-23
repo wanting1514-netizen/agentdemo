@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>炎肠智训 | 医学病例推理训练系统</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section id="loginView" class="login-view">
+        <div class="login-card">
+          <p class="eyebrow">AI for Medicine · 临床技能训练智能体</p>
+          <h1>炎肠智训</h1>
+          <p class="subtitle">以溃疡性结肠炎为示范场景的医学病例推理与临床决策训练系统</p>
+          <form id="loginForm" class="login-form">
+            <label>
+              测试账号
+              <input id="username" autocomplete="username" value="student_demo" required>
+            </label>
+            <label>
+              测试密码
+              <input id="password" type="password" autocomplete="current-password" value="ChangYu2026!" required>
+            </label>
+            <button type="submit">进入系统</button>
+            <p id="loginError" class="form-error" role="alert"></p>
+          </form>
+          <div class="demo-note">
+            <strong>评审测试账号：</strong>
+            <div class="account-line"><span class="account-tag student">学生端</span><code>student_demo</code> / <code>ChangYu2026!</code></div>
+            <div class="account-line"><span class="account-tag teacher">教学复盘</span><code>teacher_demo</code> / <code>ChangYu2026!</code></div>
+            <p class="note-small">登录后按账号进入对应端，侧栏菜单会相应切换。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="appView" class="app-shell hidden">
+        <aside class="sidebar" aria-label="系统导航">
+          <div class="brand-block">
+            <span class="brand-dot"></span>
+            <div>
+              <strong>炎肠智训</strong>
+              <small>Medical Training System</small>
+            </div>
+          </div>
+          <nav class="app-nav">
+            <div class="nav-group" data-nav-role="student">
+              <span class="nav-group-title">学生工作台</span>
+              <button class="nav-item" data-route="dashboard">学生工作台</button>
+            </div>
+            <div class="nav-group" data-nav-role="student">
+              <span class="nav-group-title">训练流程</span>
+              <button class="nav-item flow-nav" data-route="cases"><span class="step-badge">1</span>病例库</button>
+              <button class="nav-item flow-nav" data-route="interview"><span class="step-badge">2</span>虚拟问诊</button>
+              <button class="nav-item flow-nav" data-route="judgement"><span class="step-badge">3</span>学生作答</button>
+              <button class="nav-item flow-nav" data-route="analysis"><span class="step-badge">4</span>解析复盘</button>
+              <button class="nav-item flow-nav" data-route="feedback"><span class="step-badge">5</span>反馈报告</button>
+              <button class="nav-item flow-nav" data-route="explain"><span class="step-badge">6</span>解释图谱</button>
+            </div>
+            <div class="nav-group" data-nav-role="student">
+              <span class="nav-group-title">学习记录</span>
+              <button class="nav-item" data-route="history">我的学习轨迹</button>
+            </div>
+            <div class="nav-group" data-nav-role="teacher">
+              <span class="nav-group-title">教学复盘</span>
+              <button class="nav-item" data-route="teacher-home">教师工作台</button>
+              <button class="nav-item" data-route="classes">班级管理</button>
+              <button class="nav-item" data-route="builder">建课管理</button>
+              <button class="nav-item" data-route="exam">考试模式</button>
+              <button class="nav-item" data-route="teacher">教学复盘</button>
+            </div>
+          </nav>
+          <div class="sidebar-note">
+            <span>应用边界</span>
+            <p>仅用于医学教育与病例推理训练，不作为真实诊疗工具。</p>
+          </div>
+        </aside>
+
+        <section class="main-app">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow" id="routeEyebrow">Training Workspace</p>
+              <h1 id="routeTitle">学生工作台</h1>
+            </div>
+            <div class="topbar-actions">
+              <span id="sessionStatus" class="pill success">演示账号在线</span>
+              <button id="aboutBtn" class="ghost-btn" type="button" title="查看系统定位与安全边界">关于本系统</button>
+              <button id="logoutBtn" class="ghost-btn">退出</button>
+            </div>
+          </header>
+
+          <section id="page-dashboard" class="page-view active">
+            <div class="student-home-layout">
+              <article class="student-focus-card">
+                <p class="eyebrow">Next Learning Step</p>
+                <h2 id="studentPrimaryTitle">开始一次病例训练</h2>
+                <p id="studentPrimaryMeta">按病例阅读、虚拟问诊、独立判断、辨证思路、反馈复盘的顺序完成训练。</p>
+                <p id="studentPrimaryHint" class="compact-note">系统会在你提交判断后再开放解析、量规和解释图谱，避免一开始泄露答案。</p>
+                <div class="hero-cta-row">
+                  <button id="studentPrimaryBtn" class="primary-btn big-cta" type="button">开始训练</button>
+                  <button class="secondary-btn" type="button" data-go="history">学习轨迹</button>
+                </div>
+              </article>
+              <article class="student-path-card">
+                <h3>训练路径</h3>
+                <div class="learning-path">
+                  <span>病例阅读</span>
+                  <span>虚拟问诊</span>
+                  <span>风险判断</span>
+                  <span>中医辨证</span>
+                  <span>反馈复盘</span>
+                </div>
+                <p class="muted-copy compact-note">首页只提示流程，不提前展示答案、评分规则或模型解释。</p>
+              </article>
+            </div>
+            <div class="student-home-queue">
+              <article class="teacher-card compact-home-card">
+                <div class="section-title-row">
+                  <h3>考试任务</h3>
+                  <span id="studentExamBadge" class="pill neutral">暂无任务</span>
+                </div>
+                <div id="studentExamList" class="exam-task-list compact"></div>
+              </article>
+              <article class="teacher-card compact-home-card">
+                <div class="section-title-row">
+                  <h3>最近学习</h3>
+                  <button class="secondary-btn small-btn" type="button" data-go="history">查看</button>
+                </div>
+                <div class="student-recent-grid">
+                  <div>
+                    <span>当前病例</span>
+                    <strong id="dashboardCase">高风险病例</strong>
+                  </div>
+                  <div>
+                    <span>学习状态</span>
+                    <strong id="dashboardState">等待问诊</strong>
+                  </div>
+                  <div>
+                    <span>复盘入口</span>
+                    <strong id="dashboardRisk">未完成</strong>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section id="page-teacher-home" class="page-view">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Teacher Workspace</p>
+                  <h2>教师工作台</h2>
+                </div>
+                <span class="pill success">教学复盘在线</span>
+              </div>
+              <p class="prompt">首页只回答一个问题：老师现在最应该处理哪件事。指标报表放到班级管理和复盘页，不在工作台首屏堆叠。</p>
+              <div class="teacher-home-layout">
+                <section class="teacher-focus-card">
+                  <p class="eyebrow">Today Focus</p>
+                  <h3 id="thPrimaryTaskTitle">正在读取今日重点</h3>
+                  <p id="thPrimaryTaskMeta" class="muted-copy">系统会优先显示待复盘学生，其次显示考试反馈开放任务。</p>
+                  <p id="thPrimaryTaskHint" class="compact-note">如果没有待处理事项，可以直接发布一次新的训练或考试。</p>
+                  <button id="thPrimaryTaskBtn" class="primary-btn" type="button">进入处理</button>
+                </section>
+                <section class="teacher-action-card">
+                  <h3>常用操作</h3>
+                  <div class="teacher-action-list">
+                    <button class="teacher-action-btn" type="button" data-go="exam">
+                      <span>发布考试</span>
+                      <small>设置病例、时间和反馈开放方式</small>
+                    </button>
+                    <button class="teacher-action-btn" type="button" data-go="classes">
+                      <span>班级管理</span>
+                      <small>查看班级完成率和学生名单</small>
+                    </button>
+                    <button class="teacher-action-btn" type="button" data-go="builder">
+                      <span>建课管理</span>
+                      <small>创建跨专科或中西医结合案例</small>
+                    </button>
+                  </div>
+                </section>
+              </div>
+              <div class="teacher-home-queue">
+                <section class="teacher-card compact-home-card">
+                  <div class="section-title-row">
+                    <h3>待复盘</h3>
+                    <button class="secondary-btn small-btn" type="button" data-go="teacher">全部</button>
+                  </div>
+                  <div id="thPendingReviewList" class="pending-review-list compact"></div>
+                </section>
+                <section class="teacher-card compact-home-card">
+                  <div class="section-title-row">
+                    <h3>考试反馈</h3>
+                    <button class="secondary-btn small-btn" type="button" data-go="exam">管理</button>
+                  </div>
+                  <div id="thExamControlList" class="exam-control-list compact"></div>
+                </section>
+              </div>
+            </article>
+          </section>
+
+          <section id="page-cases" class="page-view">
+            <div class="page-grid cases-grid">
+              <aside class="panel side-panel">
+                <p class="eyebrow">Case Library</p>
+                <h2>训练病例库</h2>
+                <button class="case-tab active" data-case="high">高风险病例</button>
+                <button class="case-tab" data-case="low">低风险病例</button>
+                <button class="case-tab" data-case="boundary">边界病例</button>
+                <button class="case-tab" data-case="chestPain">胸痛鉴别</button>
+                <button class="case-tab" data-case="cough">慢性咳嗽</button>
+                <button class="case-tab" data-case="glucose">低血糖处理</button>
+              </aside>
+              <article class="panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Selected Case</p>
+                    <h2 id="caseLabel">高风险病例</h2>
+                  </div>
+                  <button class="primary-btn" type="button" data-go="interview">进入问诊</button>
+                </div>
+                <label class="case-input-label" for="caseInput">病例文本（学生端只读）</label>
+                <textarea id="caseInput" rows="11" readonly></textarea>
+                <div class="action-row">
+                  <button id="resetBtn" class="secondary-btn" type="button">恢复当前示例</button>
+                </div>
+              </article>
+            </div>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 1 / 6 · 病例库</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="home">返回工作台</button>
+                <button class="primary-btn" type="button" data-go="interview">下一步：虚拟问诊 →</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-interview" class="page-view">
+            <article class="panel interview-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Virtual Patient</p>
+                  <h2>虚拟患者问诊</h2>
+                </div>
+                <div class="panel-actions">
+                  <span id="patientApiStatus" class="pill neutral">本地患者话术</span>
+                  <span id="interviewStatus" class="pill neutral">等待提问</span>
+                </div>
+              </div>
+              <div class="interview-layout">
+                <aside class="patient-card">
+                  <div class="patient-avatar">患</div>
+                  <h3 id="patientName">UC训练患者</h3>
+                  <p id="patientIntro" class="muted-copy">请围绕排便频次、便血、腹痛、夜间症状、用药依从性和检查指标进行追问。</p>
+                  <div class="mini-meter post-submit-only hidden">
+                    <span>问诊覆盖度</span>
+                    <strong id="interviewCoverage">0%</strong>
+                    <div class="meter-track compact">
+                      <div id="interviewCoverageBar" class="meter-bar"></div>
+                    </div>
+                  </div>
+                  <div id="askedClueList" class="asked-list post-submit-only hidden"></div>
+                </aside>
+                <section class="chat-card">
+                  <div id="chatLog" class="chat-window" aria-live="polite"></div>
+                  <div class="custom-question">
+                    <input id="customQuestionInput" type="text" placeholder="也可以输入一句自定义追问，例如：最近有没有乏力、发热或体重变化？">
+                    <button id="askCustomBtn" class="secondary-btn" type="button">发送追问</button>
+                  </div>
+                                  </section>
+              </div>
+            </article>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 2 / 6 · 虚拟问诊</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="cases">← 上一步：病例库</button>
+                <button class="primary-btn" type="button" data-go="judgement">下一步：学生作答 →</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-analysis" class="page-view">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Smart Extraction</p>
+                  <h2>解析复盘</h2>
+                </div>
+                <div class="panel-actions">
+                  <span id="modelApiStatus" class="pill neutral">等待参考分层</span>
+                  <span id="parseStatus" class="pill neutral">提交后生成</span>
+                  <button id="analyzeBtn" class="primary-btn" type="button">重新生成复盘</button>
+                </div>
+              </div>
+              <p class="prompt">本页用于学生提交风险判断后的复盘，不在作答前展示，避免提前泄露系统分层和关键证据。</p>
+              <div id="tagCloud" class="tag-cloud"></div>
+              <div class="table-wrap">
+                <table class="structured-table">
+                  <thead>
+                    <tr>
+                      <th>维度</th>
+                      <th>系统识别</th>
+                      <th>复盘提示</th>
+                    </tr>
+                  </thead>
+                  <tbody id="structuredTable"></tbody>
+                </table>
+              </div>
+            </article>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 4 / 6 · 解析复盘</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="judgement">← 上一步：学生作答</button>
+                <button class="primary-btn" type="button" data-go="feedback">下一步：反馈报告 →</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-judgement" class="page-view">
+            <article class="panel judgement-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Student Answer</p>
+                  <h2>学生作答</h2>
+                </div>
+                <span id="riskBadge" class="risk-badge">等待分析</span>
+              </div>
+              <p class="prompt">请根据病例文本和你刚才获得的问诊信息先独立判断。提交前系统不会展示解析结果，避免影响你的临床推理。</p>
+              <div class="choice-row">
+                <button class="choice-btn" data-answer="low">低风险</button>
+                <button class="choice-btn" data-answer="medium">中风险</button>
+                <button class="choice-btn" data-answer="high">高风险</button>
+              </div>
+              <div class="tcm-task-card" id="tcmTaskCard">
+                <div class="section-title-row">
+                  <h3>中医辨证与方剂思路训练</h3>
+                  <span class="pill neutral">教学推理</span>
+                </div>
+                <p class="muted-copy">请先独立写出证候判断、治法和经典方思路，并说明依据。本模块只评价临床推理表达，不要求真实处方剂量。</p>
+                <div class="tcm-answer-grid">
+                  <label>
+                    <span>证候判断</span>
+                    <textarea id="tcmSyndromeSelect" rows="3" placeholder="请学生自行写出证候判断，并说明依据，例如：黏液脓血、里急后重、舌红苔腻支持……"></textarea>
+                  </label>
+                  <label>
+                    <span>治法思路</span>
+                    <textarea id="tcmMethodSelect" rows="3" placeholder="请学生自行写出治法思路，例如：清热利湿、调气行血，或先补充四诊信息后再定治法。"></textarea>
+                  </label>
+                  <label>
+                    <span>经典方思路</span>
+                    <textarea id="tcmFormulaSelect" rows="3" placeholder="请学生自行写出经典方思路与理由，例如：可讨论某方思路，但需说明为什么匹配或为什么暂不匹配。"></textarea>
+                  </label>
+                  <label>
+                    <span>安全边界</span>
+                    <textarea id="tcmSafetyText" rows="3" placeholder="请学生自行写出安全边界，例如哪些情况需要及时就医、哪些信息不足不能直接下结论。"></textarea>
+                  </label>
+                </div>
+              </div>
+              <div class="action-row">
+                <button id="submitJudgementBtn" class="primary-btn" type="button">提交判断并生成反馈</button>
+              </div>
+            </article>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 3 / 6 · 学生作答</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="interview">← 上一步：虚拟问诊</button>
+                <button class="primary-btn" type="button" data-go="analysis">下一步：解析复盘 →</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-feedback" class="page-view">
+            <article class="panel feedback-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Training Feedback</p>
+                  <h2>智能反馈报告</h2>
+                </div>
+                <span id="feedbackStatus" class="pill neutral">等待作答</span>
+              </div>
+              <div class="feedback-grid">
+                <div class="risk-meter">
+                  <span>系统参考分层</span>
+                  <strong id="riskLevelText">未生成</strong>
+                  <div class="meter-track">
+                    <div id="riskMeterBar" class="meter-bar"></div>
+                  </div>
+                  <small id="riskMeterHint">完成解析后显示训练分层。</small>
+                </div>
+                <div class="feedback-copy">
+                  <h3 id="feedbackTitle">尚未生成反馈</h3>
+                  <p id="feedbackText">请先完成虚拟问诊和学生判断。提交后系统会自动生成解析复盘与反馈量规。</p>
+                </div>
+              </div>
+              <div class="reasoning-grid">
+                <div>
+                  <h3>系统提示的关键证据</h3>
+                  <ul id="evidenceList"></ul>
+                </div>
+                <div>
+                  <h3>建议追问或补充的信息</h3>
+                  <ul id="followupList"></ul>
+                </div>
+              </div>
+              <div class="dual-reasoning-section">
+                <div class="section-title-row">
+                  <h3>中西医双轨推理画布</h3>
+                  <span id="syndromeConflictBadge" class="pill neutral">等待生成</span>
+                </div>
+                <div id="dualReasoningCanvas" class="dual-reasoning-canvas">
+                  <div class="empty-chart">提交后会生成西医活动度证据链与中医辨证证据链。</div>
+                </div>
+                <p id="syndromeConflictText" class="muted-copy compact-note">寒热、虚实、舌脉等冲突线索会在这里提示。</p>
+              </div>
+              <div class="rubric-section">
+                <div class="section-title-row">
+                  <h3>形成性评价量规</h3>
+                  <span id="rubricStatus" class="pill neutral">等待生成</span>
+                </div>
+                <p class="rubric-source-note muted-copy compact-note">总分满分 100 分，由7个维度按权重相加。量规参照 Mini-CEX 临床能力评价、医师资格实践技能考试中的病史采集/四诊信息采集/辨证论治要求，并改编为 UC 中西医结合病例推理训练。</p>
+                <div id="rubricScoreGrid" class="rubric-score-grid"></div>
+              </div>
+            </article>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 5 / 6 · 反馈报告</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="analysis">← 上一步：解析复盘</button>
+                <button class="primary-btn" type="button" data-go="explain">下一步：解释图谱 →</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-explain" class="page-view">
+            <article class="panel explain-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Explainable Reasoning</p>
+                  <h2>解释图谱</h2>
+                </div>
+                <span id="explainStatus" class="pill neutral">等待复盘</span>
+              </div>
+              <div class="explain-grid">
+                <div class="teacher-card wide model-figure-card">
+                  <h3 id="modelFigureTitle">内容证据链</h3>
+                  <p id="modelFigureMeta" class="muted-copy">完成作答后，这里会汇总支持判断的关键证据。</p>
+                  <img id="modelFigureImg" alt="模型SHAP组合解释图">
+                  <p id="modelFigureNote" class="model-note muted-copy">请先完成问诊和作答，再查看证据复盘。</p>
+                </div>
+                <div class="teacher-card">
+                  <h3>证据推理链</h3>
+                  <p class="muted-copy">查看每条证据来自哪里，以及它如何影响风险判断。</p>
+                  <div id="contributionChart" class="contribution-chart"></div>
+                </div>
+                <div class="teacher-card">
+                  <h3>解释引导语</h3>
+                  <p id="explainNarrative" class="muted-copy">提交后会生成你的个性化复盘。</p>
+                  <h3>下一步建议</h3>
+                  <ul id="explainTeachingList"></ul>
+                </div>
+              </div>
+            </article>
+            <div class="flow-footer">
+              <div class="flow-footer-left">
+                <span class="flow-indicator">步骤 6 / 6 · 解释图谱（训练完成）</span>
+              </div>
+              <div class="flow-footer-right">
+                <button class="secondary-btn" type="button" data-go="feedback">← 上一步：反馈报告</button>
+                <button class="secondary-btn" type="button" data-go="history">查看我的学习轨迹</button>
+                <button class="primary-btn" type="button" data-go="home">完成，返回工作台</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="page-teacher" class="page-view">
+            <article class="panel teacher-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Teaching Review</p>
+                  <h2>教学复盘</h2>
+                </div>
+                <button id="copyReportBtn" class="secondary-btn" type="button">复制训练记录</button>
+              </div>
+              <div class="review-selector">
+                <label>
+                  <span class="selector-label">选择学生提交记录</span>
+                  <select id="reviewStudentSelect">
+                    <option value="">请选择班级与学生 ...</option>
+                  </select>
+                </label>
+                <p id="reviewContextInfo" class="muted-copy compact-note">选择一名学生后，首屏只显示复盘摘要、重点问题和教学动作；详细量规可展开查看。</p>
+              </div>
+              <div class="teacher-review-main">
+                <div class="teacher-card review-summary-card">
+                  <h3>复盘摘要</h3>
+                  <div class="stat-stack compact">
+                    <div><span>完成训练</span><strong id="teacherSessionCount">0次</strong></div>
+                    <div><span>平均量规</span><strong id="teacherAvgScore">未生成</strong></div>
+                    <div><span>当前关注</span><strong id="teacherFocus">等待训练</strong></div>
+                  </div>
+                </div>
+                <div class="teacher-card">
+                  <h3>本次复盘重点</h3>
+                  <ol id="discussionList"></ol>
+                </div>
+                <div class="teacher-card">
+                  <h3>建议教学动作</h3>
+                  <ul id="teacherInsightList"></ul>
+                </div>
+              </div>
+              <details class="teacher-details review-details">
+                <summary>展开详细量规、错误诊断与训练记录</summary>
+                <div class="teacher-grid">
+                  <div class="teacher-card">
+                    <h3>形成性评价维度</h3>
+                    <div id="teacherRubricList" class="rubric-list"></div>
+                  </div>
+                  <div class="teacher-card">
+                    <h3>错误类型诊断</h3>
+                    <ul id="errorDiagnosisList"></ul>
+                  </div>
+                  <div class="teacher-card wide">
+                    <h3>证候误判与中西医薄弱点热图</h3>
+                    <div id="syndromeHeatmap" class="syndrome-heatmap"></div>
+                  </div>
+                  <div class="teacher-card wide">
+                    <h3>训练记录</h3>
+                    <pre id="trainingReport">尚未生成训练记录。</pre>
+                  </div>
+                </div>
+              </details>
+              <div class="next-row">
+                <button class="secondary-btn" type="button" data-go="classes">查看班级情况</button>
+                <button class="primary-btn" type="button" data-go="teacher-home">返回教师工作台</button>
+              </div>
+            </article>
+          </section>
+
+          <section id="page-classes" class="page-view">
+            <article class="panel class-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Class Management</p>
+                  <h2>班级管理</h2>
+                </div>
+                <span class="pill success">教学复盘</span>
+              </div>
+              <div class="class-grid">
+                <aside class="teacher-card">
+                  <h3>我的班级</h3>
+                  <div id="classList" class="class-list"></div>
+                </aside>
+                <section class="teacher-card">
+                  <h3 id="classDetailTitle">班级任务概览</h3>
+                  <div class="class-metrics">
+                    <div><span>学生数</span><strong id="classStudentCount">—</strong></div>
+                    <div><span>完成率</span><strong id="classCompleteRate">—</strong></div>
+                    <div><span>平均量规</span><strong id="classAvgScore">—</strong></div>
+                    <div><span>待重点讲解</span><strong id="classFocus">—</strong></div>
+                  </div>
+                  <div id="classPublishNotice" class="notice compact-notice hidden">
+                    <strong>已发布：</strong><span id="classPublishText">考试任务已加入当前班级。</span>
+                  </div>
+                  <p class="muted-copy compact-note">点击学生行可进入"教学复盘"查看该学生的详细记录。</p>
+                  <div class="table-wrap">
+                    <table class="structured-table compact-table">
+                      <thead>
+                        <tr>
+                          <th>学生</th>
+                          <th>训练次数</th>
+                          <th>平均量规</th>
+                          <th>薄弱点</th>
+                          <th>最近状态</th>
+                        </tr>
+                      </thead>
+                      <tbody id="classStudentTable"></tbody>
+                    </table>
+                  </div>
+                  <div class="next-row">
+                    <button class="secondary-btn" type="button" data-go="builder">创建训练案例</button>
+                    <button class="secondary-btn" type="button" data-go="exam">发布考试任务</button>
+                    <button class="primary-btn" type="button" data-go="teacher-home">返回教师工作台</button>
+                  </div>
+                </section>
+              </div>
+            </article>
+          </section>
+
+          <section id="page-exam" class="page-view">
+            <article class="panel exam-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Exam Mode</p>
+                  <h2>考试模式</h2>
+                </div>
+                <span id="examStatus" class="pill neutral">未发布</span>
+              </div>
+              <div class="notice compact-notice">
+                <strong>考试逻辑：</strong>考试模式下学生只能问诊和作答，解析、解释图谱与反馈量规在教师发布答案后开放。
+              </div>
+              <div class="exam-grid">
+                <form id="examForm" class="builder-form">
+                  <label>
+                    考试名称
+                    <input id="examTitle" type="text" value="临床病例推理阶段测验">
+                  </label>
+                  <label>
+                    发布班级
+                    <select id="examClass">
+                      <option selected>2022级临床医学2班</option>
+                      <option>2023级中西医结合1班</option>
+                      <option>住培消化方向班</option>
+                    </select>
+                  </label>
+                  <label>
+                    适用专科/疾病域
+                    <select id="examSpecialty">
+                      <option selected>消化系统：溃疡性结肠炎</option>
+                      <option>呼吸系统：慢性咳嗽/肺部感染</option>
+                      <option>心血管：胸痛/心衰</option>
+                      <option>内分泌：糖尿病急慢性并发症</option>
+                      <option>急诊：腹痛/发热/意识障碍</option>
+                      <option>自定义专科病例</option>
+                    </select>
+                  </label>
+                  <label>
+                    案例来源
+                    <select id="examSource">
+                      <option selected>教师自建案例</option>
+                      <option>系统示范题库</option>
+                      <option>校本脱敏病例库</option>
+                      <option>AI辅助生成后教师审核</option>
+                    </select>
+                  </label>
+                  <label>
+                    考试病例
+                    <select id="examCaseKey">
+                      <option value="high" selected>UC复发高风险示范病例</option>
+                      <option value="low">UC稳定随访低风险病例</option>
+                      <option value="boundary">UC信息不足边界病例</option>
+                      <option value="dampHeat">湿热蕴结辨证病例</option>
+                      <option value="spleenDef">脾虚夹湿调护病例</option>
+                      <option value="coldHeat">寒热错杂辨证病例</option>
+                      <option value="chestPain">胸痛鉴别诊断病例</option>
+                      <option value="cough">慢性咳嗽问诊病例</option>
+                      <option value="glucose">低血糖应急处理病例</option>
+                    </select>
+                  </label>
+                  <label>
+                    开始时间
+                    <input id="examStartAt" type="datetime-local">
+                  </label>
+                  <label>
+                    截止时间
+                    <input id="examEndAt" type="datetime-local">
+                  </label>
+                  <label>
+                    考试时长
+                    <select id="examDuration">
+                      <option>15分钟</option>
+                      <option selected>30分钟</option>
+                      <option>45分钟</option>
+                      <option>60分钟</option>
+                    </select>
+                  </label>
+                  <label>
+                    反馈开放方式
+                    <select id="examFeedbackMode">
+                      <option selected>教师统一发布后开放</option>
+                      <option>考试结束后自动开放</option>
+                      <option>仅教学复盘可见</option>
+                    </select>
+                  </label>
+                  <button id="publishExamBtn" class="primary-btn" type="submit">生成并发布到班级</button>
+                </form>
+                <section class="teacher-card">
+                  <h3>考试预览</h3>
+                  <div id="examPreview" class="builder-preview"></div>
+                  <h3>跨专科案例创建</h3>
+                  <p class="muted-copy">当前 Demo 用 UC 作为示范病种，但考试模式应支持教师自建多专科病例。系统负责对话、评分和复盘框架，专科知识由教师审核。</p>
+                  <div class="exam-case-list">
+                    <span>UC复发风险训练</span>
+                    <span>湿热蕴结辨证</span>
+                    <span>脾虚夹湿调护</span>
+                    <span>寒热错杂辨证</span>
+                    <span>胸痛鉴别诊断</span>
+                    <span>慢性咳嗽问诊</span>
+                    <span>糖尿病低血糖处理</span>
+                  </div>
+                  <div class="next-row">
+                    <button class="secondary-btn" type="button" data-go="builder">创建新案例</button>
+                    <button class="secondary-btn" type="button" data-go="classes">查看班级情况</button>
+                    <button class="primary-btn" type="button" data-go="teacher-home">返回教师工作台</button>
+                  </div>
+                </section>
+              </div>
+            </article>
+          </section>
+
+          <section id="page-history" class="page-view">
+            <article class="panel history-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Learning Analytics</p>
+                  <h2>学习轨迹</h2>
+                </div>
+                <span id="historyStatus" class="pill neutral">暂无记录</span>
+              </div>
+              <div class="history-stats">
+                <div class="teacher-card">
+                  <span>累计训练</span>
+                  <strong id="historyCount">0次</strong>
+                </div>
+                <div class="teacher-card">
+                  <span>综合达标率</span>
+                  <strong id="historyAccuracy">未生成</strong>
+                </div>
+                <div class="teacher-card">
+                  <span>最近薄弱点</span>
+                  <strong id="historyWeakness">等待训练</strong>
+                </div>
+              </div>
+              <div id="historyTimeline" class="history-timeline"></div>
+              <div class="next-row">
+                <button class="secondary-btn" type="button" data-go="cases">开始新一次训练</button>
+                <button class="primary-btn" type="button" data-go="home">返回工作台</button>
+              </div>
+            </article>
+          </section>
+
+          <section id="page-builder" class="page-view">
+            <article class="panel builder-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Teacher Authoring</p>
+                  <h2>建课与病例管理</h2>
+                </div>
+                <span id="builderStatus" class="pill neutral">演示草稿</span>
+              </div>
+              <div class="builder-grid">
+                <form id="builderForm" class="builder-form">
+                  <label>
+                    课堂任务名称
+                    <input id="builderTitle" type="text" value="UC复发风险病例推理训练">
+                  </label>
+                  <label>
+                    学习目标
+                    <textarea id="builderObjective" rows="4">学生能够识别UC复发风险相关线索，完成风险分层，并说明需要补充的问诊和检查信息。</textarea>
+                  </label>
+                  <label>
+                    病例难度
+                    <select id="builderDifficulty">
+                      <option>基础</option>
+                      <option selected>进阶</option>
+                      <option>挑战</option>
+                    </select>
+                  </label>
+                  <label>
+                    适用专科/疾病域
+                    <select id="builderSpecialty">
+                      <option selected>消化系统：溃疡性结肠炎</option>
+                      <option>呼吸系统</option>
+                      <option>心血管系统</option>
+                      <option>内分泌系统</option>
+                      <option>急诊医学</option>
+                      <option>全科医学</option>
+                      <option>自定义疾病域</option>
+                    </select>
+                  </label>
+                  <label>
+                    案例来源
+                    <select id="builderSource">
+                      <option selected>教师自建案例</option>
+                      <option>系统示范题库</option>
+                      <option>校本脱敏病例库</option>
+                      <option>AI辅助生成后教师审核</option>
+                    </select>
+                  </label>
+                  <label>
+                    标准训练分层
+                    <select id="builderRisk">
+                      <option>低风险</option>
+                      <option>中风险</option>
+                      <option selected>高风险</option>
+                    </select>
+                  </label>
+                  <button id="saveBuilderBtn" class="primary-btn" type="submit">保存课程草稿</button>
+                </form>
+                <div class="teacher-card">
+                  <h3>课程预览</h3>
+                  <div id="builderPreview" class="builder-preview"></div>
+                  <div class="notice compact-notice">
+                    <strong>说明：</strong>比赛 Demo 中先呈现教师建课能力的前端原型，正式版本可接入后台病例库、班级名单与学习管理系统。
+                  </div>
+                </div>
+              </div>
+              <article class="panel template-panel inline-teacher-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Cross-specialty Templates</p>
+                    <h2>跨专科案例模板</h2>
+                  </div>
+                  <span class="pill neutral">教师审核后启用</span>
+                </div>
+                <p class="muted-copy">UC 是当前示范病种；正式系统可支持教师自建多专科病例。以下模板用于展示扩展方向，不直接替代专科教师审核。</p>
+                <div class="template-grid">
+                  <button class="template-card" type="button" data-template="chestPain">
+                    <strong>胸痛鉴别诊断</strong>
+                    <span>心血管/急诊 · 问诊重点：诱因、持续时间、伴随症状、危险因素</span>
+                  </button>
+                  <button class="template-card" type="button" data-template="cough">
+                    <strong>慢性咳嗽问诊</strong>
+                    <span>呼吸系统 · 问诊重点：病程、痰液、发热、过敏史、影像检查</span>
+                  </button>
+                  <button class="template-card" type="button" data-template="glucose">
+                    <strong>低血糖处理训练</strong>
+                    <span>内分泌/急诊 · 问诊重点：用药、进食、意识状态、血糖监测</span>
+                  </button>
+                </div>
+              </article>
+              <article class="panel inline-teacher-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Clinical Basis</p>
+                    <h2>临床依据与安全边界</h2>
+                  </div>
+                  <span class="pill neutral">用于教师审核</span>
+                </div>
+                <div class="teacher-grid">
+                  <div class="teacher-card">
+                    <h3>病例模板临床依据</h3>
+                    <p id="caseClinicalSource" class="muted-copy"></p>
+                    <ul id="caseClinicalList"></ul>
+                  </div>
+                  <div class="teacher-card">
+                    <h3>红旗征象与安全边界</h3>
+                    <ul id="caseRedFlagList"></ul>
+                  </div>
+                </div>
+                <div class="teacher-card">
+                  <h3>中西医结合线索评价规则</h3>
+                  <p id="tcmRuleText" class="muted-copy"></p>
+                </div>
+              </article>
+              <div class="next-row">
+                <button id="publishDraftExamBtn" class="secondary-btn" type="button">发布为考试任务</button>
+                <button class="secondary-btn" type="button" data-go="classes">分配到班级</button>
+                <button class="primary-btn" type="button" data-go="teacher-home">返回教师工作台</button>
+              </div>
+            </article>
+          </section>
+        </section>
+      </section>
+    </main>
+    <div id="aboutModal" class="modal-overlay hidden" role="dialog" aria-labelledby="aboutTitle" aria-hidden="true">
+      <div class="modal-card">
+        <header class="modal-head">
+          <div>
+            <p class="eyebrow">About the System</p>
+            <h2 id="aboutTitle">关于本系统</h2>
+          </div>
+          <button id="aboutCloseBtn" class="ghost-btn" type="button" aria-label="关闭">×</button>
+        </header>
+        <p class="muted-copy">炎肠智训是以溃疡性结肠炎（UC）为示范场景的医学病例推理训练智能体。以下五点是系统在同类产品中的差异化定位。</p>
+        <div class="difference-grid">
+          <div class="teacher-card">
+            <h3>不是单纯虚拟病人</h3>
+            <p class="muted-copy">系统不只模拟患者回答，而是把学生问诊获得的口语信息转化为结构化医学线索，服务临床推理训练。</p>
+          </div>
+          <div class="teacher-card">
+            <h3>不是黑箱判分工具</h3>
+            <p class="muted-copy">提交后提供模型实时输出与可解释特征图谱；若后端接入逐例SHAP，则进一步呈现真实贡献值，教师可以据此组织证据链复盘。</p>
+          </div>
+          <div class="teacher-card">
+            <h3>突出中西医结合线索</h3>
+            <p class="muted-copy">UC 场景中把便次、便血、检查、依从性与寒热虚实、舌脉、方证匹配放在同一条证据链中训练，学生必须说明“为什么这样辨证”。</p>
+          </div>
+          <div class="teacher-card">
+            <h3>从单次训练走向课程治理</h3>
+            <p class="muted-copy">教师可建课建病例、发布考试、查看班级进度和薄弱点，形成课程级教学闭环。</p>
+          </div>
+          <div class="teacher-card wide">
+            <h3>可扩展但不失控</h3>
+            <p class="muted-copy">系统支持跨专科案例模板，但强调教师审核、脱敏病例和考试反馈延迟开放，避免把 AI 输出直接当作诊疗结论。</p>
+          </div>
+        </div>
+        <div class="about-safety">
+          <strong>安全边界：</strong>本系统仅用于医学教育与临床推理训练，不作为真实诊疗工具，不上传真实患者身份信息；所有演示病例为脱敏或虚拟数据；高风险提示需引导学生就医与教师复核。
+        </div>
+      </div>
+    </div>
+    <div id="historyDetailModal" class="modal-overlay hidden" role="dialog" aria-labelledby="historyDetailTitle" aria-hidden="true">
+      <div class="modal-card">
+        <header class="modal-head">
+          <div>
+            <p class="eyebrow" id="historyDetailEyebrow">Training Record</p>
+            <h2 id="historyDetailTitle">训练详情</h2>
+          </div>
+          <button id="historyDetailCloseBtn" class="ghost-btn" type="button" aria-label="关闭">×</button>
+        </header>
+        <div id="historyDetailBody" class="history-detail-body"></div>
+      </div>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
