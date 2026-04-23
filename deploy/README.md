@@ -1,5 +1,9 @@
 # Server Deployment
 
+For the current Tencent Cloud server workflow, the fastest repeatable update path is:
+
+- [server-update-quickstart](/Users/wanting/Desktop/毕业论文最终代码文件/yanchang-demo/deploy/server-update-quickstart.md)
+
 This project can be deployed in two common ways on your own cloud server.
 
 ## Option 1: Static frontend + external model API

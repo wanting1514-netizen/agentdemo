@@ -571,7 +571,7 @@ const routeMeta = {
   feedback: ["Training Feedback", "反馈报告"],
   explain: ["Explainable Reasoning", "解释图谱"],
   history: ["Learning Analytics", "我的学习轨迹"],
-  "teacher-home": ["Teacher Workspace", "师工作台"],
+  "teacher-home": ["Teacher Workspace", "教师工作台"],
   teacher: ["Teaching Review", "教学复盘"],
   classes: ["Class Management", "班级管理"],
   exam: ["Exam Mode", "考试模式"],
@@ -2674,9 +2674,20 @@ function updateTeacherReport(summary) {
 
 function updateDashboard(status) {
   const sample = samples[state.activeCase];
+  const activeExam = getActiveExam();
+  const examFeedbackLocked = state.mode === "exam" && activeExam && hasCompletedExam(activeExam.id) && !isExamFeedbackOpen(activeExam);
+  const dashboardEntryText = state.rubric.length
+    ? "查看复盘"
+    : examFeedbackLocked
+      ? "待开放"
+      : (state.selectedAnswer || state.analysis)
+        ? "待提交"
+        : state.interview.length
+          ? "待作答"
+          : "未开始";
   if (dashboardCase) dashboardCase.textContent = sample ? sample.label : "自定义病例";
   if (dashboardState) dashboardState.textContent = status || (state.analysis ? "已完成解析": "等待问诊");
-  if (dashboardRisk) dashboardRisk.textContent = state.rubric.length ? "查看复盘" : (state.interview.length ? "续完成": "完成");
+  if (dashboardRisk) dashboardRisk.textContent = dashboardEntryText;
   refreshStudentHomePrimary();
 }
 
@@ -3178,12 +3189,12 @@ const defaultClassMock = [
     size: 48,
     completeRate: 82,
     students: [
-      { id: "s-2022-2-01", name: "子悦", sessions: 4, avg: 88, weakness: "据整合", correct: 3, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-20 14:32:10" },
-      { id: "s-2022-2-02", name: "安然", sessions: 3, avg: 73, weakness: "查追问", correct: 1, lastCase: "界病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-19 10:15:02" },
-      { id: "s-2022-2-03", name: "思远", sessions: 5, avg: 91, weakness: "险表达深化", correct: 5, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-21 09:08:45" },
-      { id: "s-2022-2-04", name: "雨欣", sessions: 2, avg: 68, weakness: "药依从性追问", correct: 1, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-18 16:44:30" },
-      { id: "s-2022-2-05", name: "梦洁", sessions: 4, avg: 84, weakness: "全边界表达", correct: 3, lastCase: "界病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-20 20:11:58" },
-      { id: "s-2022-2-06", name: "志远", sessions: 1, avg: 62, weakness: "问诊覆盖不足", correct: 0, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-17 11:02:19" },
+      { id: "s-2022-2-01", name: "子悦", sessions: 4, avg: 88, weakness: "证据整合", correct: 3, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-20 14:32:10" },
+      { id: "s-2022-2-02", name: "安然", sessions: 3, avg: 73, weakness: "检查追问", correct: 1, lastCase: "边界病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-19 10:15:02" },
+      { id: "s-2022-2-03", name: "思远", sessions: 5, avg: 91, weakness: "风险表达深化", correct: 5, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-21 09:08:45" },
+      { id: "s-2022-2-04", name: "雨欣", sessions: 2, avg: 68, weakness: "用药依从性追问", correct: 1, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-18 16:44:30" },
+      { id: "s-2022-2-05", name: "梦洁", sessions: 4, avg: 84, weakness: "安全边界表达", correct: 3, lastCase: "边界病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-20 20:11:58" },
+      { id: "s-2022-2-06", name: "志远", sessions: 1, avg: 62, weakness: "问诊覆盖不足", correct: 0, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-17 11:02:19" },
     ],
   },
   {
@@ -3192,10 +3203,10 @@ const defaultClassMock = [
     size: 36,
     completeRate: 64,
     students: [
-      { id: "s-2023-t-01", name: "佳宁", sessions: 3, avg: 80, weakness: "脉信息整合", correct: 2, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-20 15:23:11" },
-      { id: "s-2023-t-02", name: "若彤", sessions: 2, avg: 75, weakness: "西医结合推理", correct: 1, lastCase: "界病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-19 19:42:08" },
-      { id: "s-2023-t-03", name: "家豪", sessions: 4, avg: 86, weakness: "查指标追问", correct: 3, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-21 08:58:33" },
-      { id: "s-2023-t-04", name: "梓涵", sessions: 1, avg: 58, weakness: "心症状识别", correct: 0, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-16 14:07:50" },
+      { id: "s-2023-t-01", name: "佳宁", sessions: 3, avg: 80, weakness: "舌脉信息整合", correct: 2, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-20 15:23:11" },
+      { id: "s-2023-t-02", name: "若彤", sessions: 2, avg: 75, weakness: "中西医结合推理", correct: 1, lastCase: "边界病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-19 19:42:08" },
+      { id: "s-2023-t-03", name: "家豪", sessions: 4, avg: 86, weakness: "检查指标追问", correct: 3, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-21 08:58:33" },
+      { id: "s-2023-t-04", name: "梓涵", sessions: 1, avg: 58, weakness: "核心症状识别", correct: 0, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-16 14:07:50" },
     ],
   },
   {
@@ -3204,20 +3215,61 @@ const defaultClassMock = [
     size: 24,
     completeRate: 91,
     students: [
-      { id: "s-res-gi-01", name: "书言(规培)", sessions: 6, avg: 92, weakness: "据表达深化", correct: 6, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-21 16:30:44" },
-      { id: "s-res-gi-02", name: "佳怡(规培)", sessions: 5, avg: 88, weakness: "险分层阈值讨论", correct: 4, lastCase: "界病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-20 21:14:09" },
-      { id: "s-res-gi-03", name: "辰阳(规培)", sessions: 4, avg: 83, weakness: "息不足下的表达", correct: 3, lastCase: "风险病例", selected: "风险", systemLevel: "风险", lastTime: "2026-04-19 22:51:27" },
+      { id: "s-res-gi-01", name: "书言(规培)", sessions: 6, avg: 92, weakness: "证据表达深化", correct: 6, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-21 16:30:44" },
+      { id: "s-res-gi-02", name: "佳怡(规培)", sessions: 5, avg: 88, weakness: "风险分层阈值讨论", correct: 4, lastCase: "边界病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-20 21:14:09" },
+      { id: "s-res-gi-03", name: "辰阳(规培)", sessions: 4, avg: 83, weakness: "信息不足下的表达", correct: 3, lastCase: "高风险病例", selected: "高风险", systemLevel: "高风险", lastTime: "2026-04-19 22:51:27" },
     ],
   },
 ];
 
+const classMockWeaknessFixups = {
+  据整合: "证据整合",
+  查追问: "检查追问",
+  险表达深化: "风险表达深化",
+  全边界表达: "安全边界表达",
+  脉信息整合: "舌脉信息整合",
+  西医结合推理: "中西医结合推理",
+  查指标追问: "检查指标追问",
+  心症状识别: "核心症状识别",
+  据表达深化: "证据表达深化",
+  险分层阈值讨论: "风险分层阈值讨论",
+  息不足下的表达: "信息不足下的表达",
+};
+
+const classMockCaseFixups = {
+  风险病例: "高风险病例",
+  界病例: "边界病例",
+};
+
+const classMockRiskFixups = {
+  风险: "高风险",
+};
+
+function normalizeClassMockData(list = []) {
+  return (list || []).map((klass) => ({
+    ...klass,
+    students: (klass.students || []).map((student) => ({
+      ...student,
+      weakness: classMockWeaknessFixups[student.weakness] || student.weakness,
+      lastCase: classMockCaseFixups[student.lastCase] || student.lastCase,
+      selected: classMockRiskFixups[student.selected] || student.selected,
+      systemLevel: classMockRiskFixups[student.systemLevel] || student.systemLevel,
+    })),
+  }));
+}
+
 function readClassMock() {
   try {
     const raw = localStorage.getItem(LS_CLASS_MOCK);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const normalized = normalizeClassMockData(JSON.parse(raw));
+      localStorage.setItem(LS_CLASS_MOCK, JSON.stringify(normalized));
+      return normalized;
+    }
   } catch {}
-  localStorage.setItem(LS_CLASS_MOCK, JSON.stringify(defaultClassMock));
-  return defaultClassMock;
+  const seeded = normalizeClassMockData(defaultClassMock);
+  localStorage.setItem(LS_CLASS_MOCK, JSON.stringify(seeded));
+  return seeded;
 }
 function readPendingExams() {
   try { return JSON.parse(localStorage.getItem(LS_PENDING_EXAMS)) || []; } catch { return []; }
@@ -3419,11 +3471,11 @@ function renderStudentExamTasks() {
       card.innerHTML = `
         <div class="exam-task-head">
           <strong>${escapeHtml(exam.title)}</strong>
-          <span class="pill ${open ? "success" : "warn"}">${open ? "馈已开放": "待教师开放"}</span>
+          <span class="pill ${open ? "success" : "warn"}">${open ? "反馈已开放": "待教师开放"}</span>
         </div>
         <p class="muted-copy">${escapeHtml(exam.caseLabel || "训练病例")} · 已提交</p>
         <div class="exam-task-actions">
-          <button class="secondary-btn small-btn" type="button" ${open ? "" : "disabled"}>${open ? "看轨迹": "馈未开放"}</button>
+          <button class="secondary-btn small-btn" type="button" ${open ? "" : "disabled"}>${open ? "看轨迹": "反馈未开放"}</button>
         </div>
       `;
       const btn = card.querySelector("button");
@@ -3448,7 +3500,7 @@ function renderStudentExamTasks() {
     const notStarted = exam.startAt && now < exam.startAt;
     const expired = exam.dueAt && now > exam.dueAt;
     const canEnter = !notStarted && !expired;
-    const statusText = notStarted ? "开始" : (expired ? "截止" : "完成");
+    const statusText = notStarted ? "未开始" : (expired ? "已截止" : "待完成");
     const card = document.createElement("div");
     card.className = "exam-task-card compact";
     card.innerHTML = `
@@ -3457,9 +3509,9 @@ function renderStudentExamTasks() {
         <span class="pill ${canEnter ? "warn" : "neutral"}">${statusText}</span>
       </div>
       <p class="muted-copy">${escapeHtml(exam.caseLabel || "训练病例")} · ${expired ? "截止，未提交" : remainLabel}</p>
-      <p class="muted-copy">${notStarted ? "放：" + escapeHtml(formatDateTime(exam.startAt)) : expired ? "考试已过截止时间": "反馈：" + escapeHtml(exam.feedbackMode)}</p>
+      <p class="muted-copy">${notStarted ? "开放：" + escapeHtml(formatDateTime(exam.startAt)) : expired ? "考试已过截止时间" : "反馈：" + escapeHtml(exam.feedbackMode)}</p>
       <div class="exam-task-actions">
-        <button class="${canEnter ? "primary-btn" : "secondary-btn"} small-btn" type="button" data-exam-id="${escapeHtml(exam.id)}" ${canEnter ? "" : "disabled"}>${notStarted ? "开始" : (expired ? "截止" : "入")}</button>
+        <button class="${canEnter ? "primary-btn" : "secondary-btn"} small-btn" type="button" data-exam-id="${escapeHtml(exam.id)}" ${canEnter ? "" : "disabled"}>${notStarted ? "未开始" : (expired ? "已截止" : "进入考试")}</button>
       </div>
     `;
     if (canEnter) card.querySelector("button").addEventListener("click", () => startExam(exam));
@@ -3641,7 +3693,7 @@ function renderTeacherHome() {
             <p class="muted-copy">${escapeHtml(exam.className)} · 已提交 ${count} 份</p>
             <p class="muted-copy">${open ? "反馈已开放" : escapeHtml(exam.feedbackMode)}</p>
           </div>
-          <button class="${canRelease ? "primary-btn" : "secondary-btn"}" type="button" ${canRelease ? "" : "disabled"}>${open ? "反馈已开放" : (exam.feedbackMode === "教学复盘可见" ? "教师可见" : "放反馈")}</button>
+          <button class="${canRelease ? "primary-btn" : "secondary-btn"}" type="button" ${canRelease ? "" : "disabled"}>${open ? "反馈已开放" : (exam.feedbackMode === "教学复盘可见" ? "教师可见" : "开放反馈")}</button>
         `;
         const btn = card.querySelector("button");
         if (canRelease) btn.addEventListener("click", () => releaseExamFeedback(exam.id));
@@ -3664,7 +3716,7 @@ function renderTeacherHome() {
             <strong>student_demo</strong>
             <span class="pill ${st.rubricAvg < 70 ? "warn" : "neutral"}">${escapeHtml(st.rubricAvg || 0)} 分</span>
           </div>
-          <p class="muted-copy">${escapeHtml(st.examClassName || "绑定班级")} · ${escapeHtml(st.examTitle || "试任务")}</p>
+          <p class="muted-copy">${escapeHtml(st.examClassName || "未绑定班级")} · ${escapeHtml(st.examTitle || "考试任务")}</p>
           <p class="muted-copy">重点：${escapeHtml(st.weakness || "待教师复盘")}</p>
         ` : `
           <div class="pending-review-head">
