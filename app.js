@@ -384,7 +384,8 @@ const LS_PENDING_EXAMS = "yanchang-pending-exams-v1";
 const LS_EXAM_SUBMISSIONS = "yanchang-exam-submissions-v1";
 const LS_CLASS_MOCK = "yanchang-class-mock-v1";
 const LS_COMPLETED_EXAMS = "yanchang-completed-exams-v1";
-const REMOTE_UC_MODEL_API_URL = "https://modest-miracle-production-6da8.up.railway.app/predict";
+// GitHub Pages is a static host, so keep remote integrations opt-in.
+const REMOTE_UC_MODEL_API_URL = "";
 const ENABLE_NETLIFY_MODEL_PROXY = false;
 const ENABLE_PATIENT_API = false;
 
