@@ -378,6 +378,19 @@ const interviewQuestions = [
   { key: "hypoglycemiaHistory", label: "血糖史", required: true, question: "以前有没有发生过低血糖？严重到晕倒过吗？" },
 ];
 
+const caseRequiredQuestionMap = {
+  high: ["stool", "blood", "pain", "night", "medication", "exam"],
+  low: ["stool", "blood", "pain", "night", "medication", "exam"],
+  boundary: ["stool", "blood", "pain", "night", "medication", "exam"],
+  dampHeat: ["stool", "blood", "pain", "night", "medication", "exam"],
+  spleenDef: ["stool", "blood", "pain", "night", "medication", "exam"],
+  coldHeat: ["stool", "blood", "pain", "night", "medication", "exam"],
+  custom: ["stool", "blood", "pain", "night", "medication", "exam"],
+  chestPain: ["painLocation", "painQuality", "painRadiation", "painDuration", "triggerRelief", "riskFactors"],
+  cough: ["coughDuration", "sputum", "triggers", "allergy", "smoking"],
+  glucose: ["hypoglycemiaYesterday", "insulin", "breakfast", "glucoseMonitoring", "hypoglycemiaHistory"],
+};
+
 const historyStorageKey = "yanchang-training-history-v3";
 const LS_BUILDER_DRAFTS = "yanchang-builder-drafts-v1";
 const LS_PENDING_EXAMS = "yanchang-pending-exams-v1";
@@ -603,19 +616,19 @@ const modelExplanationAssets = {
     title: "脱敏SHAP参考图 · 高风险样本",
     image: "./assets/model_shap_high_combo.png",
     source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 7698；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "若当前网络模型服务不可用，系统才展示该静态参考图；模型服务可用时以上方实时输出为准。",
+    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
   },
   low: {
     title: "脱敏SHAP参考图 · 低风险样本",
     image: "./assets/model_shap_low_combo.png",
     source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 7053；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "若当前网络模型服务不可用，系统才展示该静态参考图；模型服务可用时以上方实时输出为准。",
+    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
   },
   boundary: {
     title: "脱敏SHAP参考图 · 边界样本",
     image: "./assets/model_shap_boundary_combo.png",
     source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 5570；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "若当前网络模型服务不可用，系统才展示该静态参考图；模型服务可用时以上方实时输出为准。",
+    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
   },
   chestPain: {
     title: "胸痛鉴别诊断 · 急性冠脉综合征风险评估",
@@ -1355,7 +1368,7 @@ function getPatientProfile() {
 }
 
 function requiredQuestionKeys() {
-  return interviewQuestions.filter((item) => item.required).map((item) => item.key);
+  return caseRequiredQuestionMap[state.activeCase] || caseRequiredQuestionMap.high;
 }
 
 function askedKeySet() {
@@ -1404,7 +1417,7 @@ function renderInterview() {
   const asked = askedKeySet();
   if (!askedClueList) return;
   askedClueList.innerHTML = "";
-  interviewQuestions.filter((item) => item.required).forEach((item) => {
+  requiredQuestionKeys().map((key) => interviewQuestions.find((item) => item.key === key)).filter(Boolean).forEach((item) => {
     const tag = document.createElement("span");
     tag.className = asked.has(item.key) ? "asked" : "missing";
     tag.textContent = `${asked.has(item.key) ? "已问": "待问"}：${item.label}`;
@@ -2266,10 +2279,9 @@ function buildRubric(correct) {
   const tcmText = [state.tcmAnswer.syndrome, state.tcmAnswer.method, state.tcmAnswer.formula, state.tcmAnswer.safety].join(" ");
   const evidenceCitationHit = /黏液|脓血|便血|里急后重|腹痛|夜间|舌|苔|脉|寒|热|虚|湿|齿痕|检查|用药|停药|乏力|纳食|粪钙|CRP|内镜/.test(tcmText);
   const evidenceSentenceHit = /因为|由于|提示|支持|依据|结合|可见|考虑|所以|原文|患者/.test(tcmText);
-  const lowInfoPenalty = Math.max(0, 70 - coverage.percent) * 0.45;
-  const essentialKeys = ["stool", "blood", "pain", "night", "medication", "exam"];
-  const essentialCovered = essentialKeys.filter((key) => asked.has(key)).length;
-  const coverageLevel = coverage.percent >= 70 ? "本达标" : coverage.percent >= 50 ? "需补强": "显不足";
+  const coreKeys = requiredQuestionKeys();
+  const essentialCovered = coreKeys.filter((key) => asked.has(key)).length;
+  const coverageLevel = coverage.percent >= 70 ? "基本达标" : coverage.percent >= 50 ? "仍需补强" : "明显不足";
   const weighted = (label, rawScore, weight, feedback) => ({
     label,
     score: Math.round((rawScore / 100) * weight),
@@ -2282,49 +2294,47 @@ function buildRubric(correct) {
     return [
       weighted("病史采集", 0, 20, "尚未开始虚拟问诊，本项暂不计分。"),
       weighted("西医线索", 0, 15, "尚未采集活动度线索，本项暂不计分。"),
-      weighted("床推理", 0, 20, "尚未完成问诊取证，本项暂不计分。"),
-      weighted("诊证据", 0, 10, "尚未完成四诊相关取证，本项暂不计分。"),
+      weighted("临床推理", 0, 20, "尚未完成问诊取证，本项暂不计分。"),
+      weighted("四诊证据", 0, 10, "尚未完成四诊相关取证，本项暂不计分。"),
       weighted("辨证论治", 0, 15, "尚未形成辨证依据，本项暂不计分。"),
-      weighted("西医整合", 0, 10, "尚未形成中西医整合证据链，本项暂不计分。"),
+      weighted("中西医整合", 0, 10, "尚未形成中西医整合证据链，本项暂不计分。"),
       weighted("安全沟通", 0, 10, "尚未追问检查、用药或复诊安全信息，本项暂不计分。"),
     ];
   }
 
-  const historyScore = Math.round(clamp(12 + coverage.percent * 0.78 + (asked.has("overview") ? 4 : 0), 0, 95));
-  const westernClueScore = Math.round(clamp(24 + essentialCovered * 8 + Math.min(hitCount, 5) * 4 - lowInfoPenalty * 0.5, 0, 95));
-  const reasoningScore = Math.round(clamp((correct ? 66 : 42) + essentialCovered * 4 + Math.min(hitCount, 4) * 3 - lowInfoPenalty, 0, 92));
-  const fourDiagnosisScore = tcmEval.hasAnyInput
-    ? Math.round(clamp(
-        18 + Math.min(tcmRows.length, 4) * 10 + (asked.has("tongue") ? 10 : 0) + (tcmEval.evidenceHit ? 8 : 0) - (coverage.percent < 35 ? 8 : 0),
+  const historyScore = coverage.covered === 0
+    ? 0
+    : Math.round(clamp(coverage.percent * 0.92 + (asked.has("overview") ? 5 : 0), 0, 100));
+  const westernClueScore = coreKeys.length === 0 || essentialCovered === 0
+    ? 0
+    : Math.round(clamp((essentialCovered / coreKeys.length) * 100 + (hitCount > 0 ? 5 : 0), 0, 100));
+  const reasoningScore = essentialCovered === 0
+    ? 0
+    : Math.round(clamp((correct ? 32 : 10) + coverage.percent * 0.45 + essentialCovered * 5, 0, 100));
+  const fourDiagnosisScore = (!asked.has("tongue") && !tcmEval.hasAnyInput)
+    ? 0
+    : Math.round(clamp((asked.has("tongue") ? 32 : 0) + tcmEval.filledCount * 16 + (tcmEval.evidenceHit ? 20 : 0), 0, 100));
+  const syndromeScore = !tcmEval.hasAnyInput
+    ? 0
+    : Math.round(clamp(
+        tcmEval.matchCount * 28 + tcmEval.reasonedCount * 16 + (evidenceCitationHit ? 14 : 0) - (conflict.level === "warn" && tcmEval.matchCount < 2 ? 10 : 0),
         0,
-        94,
-      ))
-    : 0;
-  const syndromeScore = tcmEval.hasAnyInput
-    ? Math.round(clamp(
-        20 + tcmEval.matchCount * 14 + tcmEval.reasonedCount * 7 + (evidenceCitationHit ? 10 : 0) - (conflict.level === "warn" && tcmEval.matchCount < 2 ? 8 : 0),
-        0,
-        94,
-      ))
-    : 0;
-  const integrationScore = Math.round(clamp(
-    18 + essentialCovered * 5 + Math.min(tcmRows.length, 4) * 6 + (evidenceCitationHit ? 10 : 0) + (evidenceSentenceHit ? 8 : 0) - (coverage.percent < 50 ? 10 : 0),
-    0,
-    95,
-  ));
-  const safetyScore = Math.round(clamp(
-    (asked.has("medication") ? 16 : 0) + (asked.has("exam") ? 14 : 0) + (asked.has("night") ? 6 : 0) + (tcmEval.safetyHit ? 22 : 0) + (correct ? 4 : 0),
-    0,
-    92,
-  ));
+        100,
+      ));
+  const integrationScore = (!tcmEval.hasAnyInput || essentialCovered === 0)
+    ? 0
+    : Math.round(clamp(essentialCovered * 10 + tcmEval.reasonedCount * 18 + (evidenceCitationHit ? 16 : 0) + (evidenceSentenceHit ? 18 : 0), 0, 100));
+  const safetyScore = (!tcmEval.safetyHit && !asked.has("exam") && !asked.has("medication"))
+    ? 0
+    : Math.round(clamp((asked.has("medication") ? 20 : 0) + (asked.has("exam") ? 20 : 0) + (asked.has("night") ? 8 : 0) + (tcmEval.safetyHit ? 40 : 0), 0, 100));
 
   return [
     weighted("病史采集", historyScore, 20, `参照病史采集/医学面谈要求：已覆盖${coverage.covered}/${coverage.total}个核心问诊点，信息采集${coverageLevel}。`),
-    weighted("西医线索", westernClueScore, 15, `围绕便次、便血、腹痛、夜间症状、用药和检查评估活动度；当前核心线索覆盖${essentialCovered}/${essentialKeys.length}。`),
-    weighted("床推理", reasoningScore, 20, correct && coverage.percent < 70 ? "判断方向一致，但证据采集不足，按 OSCE/mini-CEX 思路不能视为完整达标。" : (correct ? "风险分层与系统参考结果一致，需继续强化证据链表达。" : "建议回到证据链复盘分层依据。")),
-    weighted("诊证据", fourDiagnosisScore, 10, asked.has("tongue") || tcmRows.length >= 2 ? "已触及部分寒热、虚实、舌脉或饮食诱因证据。" : "需补充舌脉、寒热、虚实、饮食诱因等四诊信息。"),
+    weighted("西医线索", westernClueScore, 15, `围绕当前病例的核心临床线索进行活动度/风险评估；当前核心线索覆盖${essentialCovered}/${coreKeys.length}。`),
+    weighted("临床推理", reasoningScore, 20, correct && coverage.percent < 70 ? "判断方向一致，但证据采集不足，按 OSCE/mini-CEX 思路不能视为完整达标。" : (correct ? "风险分层与系统参考结果一致，需继续强化证据链表达。" : "建议回到证据链复盘分层依据。")),
+    weighted("四诊证据", fourDiagnosisScore, 10, asked.has("tongue") || tcmEval.hasAnyInput ? "已触及部分寒热、虚实、舌脉或饮食诱因证据。" : "需补充舌脉、寒热、虚实、饮食诱因等四诊信息。"),
     weighted("辨证论治", syndromeScore, 15, tcmEval.matchCount >= 2 ? `证候、治法或方证方向较一致；${conflict.text}` : `建议按证候、治法、方证思路重写辨证依据。${conflict.text}`),
-    weighted("西医整合", integrationScore, 10, evidenceCitationHit && evidenceSentenceHit ? "已尝试把活动度证据与证候/方证依据连接起来。" : "需把西医活动度证据和中医证候证据写成同一条推理链。"),
+    weighted("中西医整合", integrationScore, 10, evidenceCitationHit && evidenceSentenceHit ? "已尝试把活动度证据与证候/方证依据连接起来。" : "需把西医活动度证据和中医证候证据写成同一条推理链。"),
     weighted("安全沟通", safetyScore, 10, tcmEval.safetyHit
       ? "已关注复诊、加重就医或方药审核等安全边界。"
       : (asked.has("exam") && asked.has("medication") ? "已关注检查与用药依从性，建议补充复诊和方药审核边界。" : "建议补充检查指标、用药依从性、复诊提醒和方药审核边界。")),
@@ -2497,7 +2507,7 @@ async function submitJudgement() {
 function missingRequiredLabels() {
   const asked = askedKeySet();
   return interviewQuestions
-    .filter((item) => item.required && !asked.has(item.key))
+    .filter((item) => requiredQuestionKeys().includes(item.key) && !asked.has(item.key))
     .map((item) => item.label);
 }
 
