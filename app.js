@@ -757,7 +757,7 @@ const caseClinicalBasis = {
     source: "基于信息不足场景下的临床推理训练规范与不确定性表达教学要求。",
     references: [
       "边界病例教学重点是补问策略与不确定性管理，而非快速下结论。",
-      "求学生阐明「前证据不足点」与「下一步最小必要信息」。",
+      "要求学生阐明「当前证据不足点」与「下一步最小必要信息」。",
       "中西医结合信息缺失（舌脉未记录）应被明确标注并追补。",
     ],
     redFlags: [
@@ -2533,6 +2533,7 @@ function saveTrainingHistory(correct) {
     id: Date.now(),
     time: new Date().toLocaleString("zh-CN", { hour12: false }),
     mode: state.mode,
+    examId: state.activeExam ? state.activeExam.id : "",
     examTitle: state.activeExam ? state.activeExam.title : "",
     caseLabel: sample ? sample.label : "自定义病例",
     caseText: caseInput.value,
@@ -2556,18 +2557,26 @@ function saveTrainingHistory(correct) {
 }
 
 function renderHistory() {
-  const records = state.history;
+  const allRecords = state.history;
+  const records = allRecords.filter((record) => {
+    if (state.role !== "student" || record.mode !== "exam" || !record.examId) return true;
+    const exam = latestExamById(record.examId);
+    return !exam || isExamFeedbackOpen(exam);
+  });
+  const hiddenLockedExamCount = allRecords.length - records.length;
   historyTimeline.innerHTML = "";
   historyCount.textContent = `${records.length}次`;
   teacherSessionCount.textContent = `${records.length}次`;
   if (!records.length) {
-    historyStatus.textContent = "暂无记录";
-    historyStatus.className = "pill neutral";
+    historyStatus.textContent = hiddenLockedExamCount ? "待开放" : "暂无记录";
+    historyStatus.className = hiddenLockedExamCount ? "pill warn" : "pill neutral";
     historyAccuracy.textContent = "未生成";
-    historyWeakness.textContent = "等待训练";
+    historyWeakness.textContent = hiddenLockedExamCount ? "考试反馈待开放" : "等待训练";
     teacherAvgScore.textContent = "未生成";
-    teacherFocus.textContent = "等待训练";
-    historyTimeline.innerHTML = '<div class="empty-chart">完成一次学生作答后，系统会在这里生成学习轨迹。</div>';
+    teacherFocus.textContent = hiddenLockedExamCount ? "等待教师开放反馈" : "等待训练";
+    historyTimeline.innerHTML = hiddenLockedExamCount
+      ? '<div class="empty-chart">考试已提交，学习轨迹将在教师开放反馈后显示。</div>'
+      : '<div class="empty-chart">完成一次学生作答后，系统会在这里生成学习轨迹。</div>';
     return;
   }
 
@@ -2589,7 +2598,7 @@ function renderHistory() {
     item.dataset.idx = String(index);
     const askedPercent = record.asked && typeof record.asked.percent === "number" ? record.asked.percent : 0;
     const qualified = record.qualified || (record.correct && askedPercent >= 70 && record.rubricAvg >= 70);
-    const resultLabel = qualified ? "合达标" : (record.correct ? "据不足" : "复盘");
+    const resultLabel = qualified ? "综合达标" : (record.correct ? "证据不足" : "待复盘");
     const modeTag = record.mode === "exam"
       ? `<span class="mode-tag exam">考试模式</span>`
       : `<span class="mode-tag practice">自由练习</span>`;
@@ -3529,9 +3538,12 @@ function startExam(exam) {
 }
 
 function exitExamMode() {
+  const resetCaseKey = samples[state.activeCase] ? state.activeCase : "high";
   state.mode = "practice";
   state.activeExam = null;
   document.body.dataset.mode = "practice";
+  clearExamCountdownTimer();
+  loadSample(resetCaseKey);
   applyModeHints();
 }
 
@@ -3944,8 +3956,8 @@ function renderReviewForSubmission(submissionId) {
   renderSyndromeHeatmap([
     { label: "本次证据引用", value: (sub.evidence || []).length || 1, hint: "病例/问诊证据" },
     { label: "问诊覆盖缺口", value: Math.max(0, (asked.total || 0) - (asked.covered || 0)), hint: "需补问核心项" },
-    { label: "证表达待评", value: sub.tcmAnswer && sub.tcmAnswer.formula ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.formula ? "写方证思路": "写方证依据" },
-    { label: "全边界待评", value: sub.tcmAnswer && sub.tcmAnswer.safety ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.safety ? "写边界": "写安全边界" },
+    { label: "方证表达待评", value: sub.tcmAnswer && sub.tcmAnswer.formula ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.formula ? "已写方证思路" : "需写方证依据" },
+    { label: "安全边界待评", value: sub.tcmAnswer && sub.tcmAnswer.safety ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.safety ? "已写安全边界" : "需写安全边界" },
   ]);
 }
 function renderReviewForStudent(studentId) {
@@ -4017,9 +4029,9 @@ function renderReviewForStudent(studentId) {
   ]);
   renderErrorDiagnosis(errorTypes);
   renderSyndromeHeatmap([
-    { label: student.weakness.includes("脉") ? "问舌脉" : "脉整合待查", value: student.weakness.includes("脉") ? 5 : 2, hint: "诊证据" },
-    { label: student.weakness.includes("西医") ? "西医证据断裂" : "险与辨证衔接", value: student.weakness.includes("西医") ? 5 : 3, hint: "轨推理" },
-    { label: consistent ? "证依据待深化" : "层与辨证均需复盘", value: consistent ? 2 : 5, hint: "堂讨论" },
+    { label: student.weakness.includes("脉") ? "补问舌脉" : "舌脉整合待查", value: student.weakness.includes("脉") ? 5 : 2, hint: "四诊证据" },
+    { label: student.weakness.includes("西医") ? "西医证据断裂" : "风险与辨证衔接", value: student.weakness.includes("西医") ? 5 : 3, hint: "双轨推理" },
+    { label: consistent ? "证据依据待深化" : "风险分层与辨证均需复盘", value: consistent ? 2 : 5, hint: "课堂讨论" },
     { label: "方证匹配表达", value: 4, hint: "需写依据" },
   ]);
 }
@@ -4067,6 +4079,22 @@ const historyDetailEyebrow = document.querySelector("#historyDetailEyebrow");
 
 function openHistoryDetail(record) {
   if (!historyDetailModal || !historyDetailBody) return;
+  const lockedExamRecord = state.role === "student" && record.mode === "exam" && record.examId && !isExamFeedbackOpen(latestExamById(record.examId));
+  if (lockedExamRecord) {
+    historyDetailEyebrow.textContent = "Exam Submission";
+    historyDetailBody.innerHTML = `
+      <div class="detail-head-row">
+        <span class="mode-tag exam">考试模式</span>
+        ${record.examTitle ? `<span class="exam-title-inline">${escapeHtml(record.examTitle)}</span>` : ""}
+        <span class="muted-copy">${escapeHtml(record.time)}</span>
+      </div>
+      <h3>${escapeHtml(record.caseLabel)}</h3>
+      <p class="muted-copy">该考试记录已提交，但教师尚未开放学生端反馈。开放后这里才会显示解析、量规和复盘内容。</p>
+    `;
+    historyDetailModal.classList.remove("hidden");
+    historyDetailModal.setAttribute("aria-hidden", "false");
+    return;
+  }
   historyDetailEyebrow.textContent = record.mode === "exam" ? "Exam Submission" : "Training Record";
   const asked = record.asked || { covered: 0, total: 0, percent: 0 };
   const qualified = record.qualified || (record.correct && asked.percent >= 70 && record.rubricAvg >= 70);
