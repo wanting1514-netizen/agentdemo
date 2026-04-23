@@ -384,10 +384,12 @@ const LS_PENDING_EXAMS = "yanchang-pending-exams-v1";
 const LS_EXAM_SUBMISSIONS = "yanchang-exam-submissions-v1";
 const LS_CLASS_MOCK = "yanchang-class-mock-v1";
 const LS_COMPLETED_EXAMS = "yanchang-completed-exams-v1";
-// GitHub Pages is a static host, so keep remote integrations opt-in.
-const REMOTE_UC_MODEL_API_URL = "";
+const runtimeConfig = window.YANCHANG_CONFIG || {};
+const configText = (value) => (typeof value === "string" ? value.trim() : "");
+const REMOTE_UC_MODEL_API_URL = configText(runtimeConfig.modelApiUrl);
+const REMOTE_PATIENT_API_URL = configText(runtimeConfig.patientApiUrl);
 const ENABLE_NETLIFY_MODEL_PROXY = false;
-const ENABLE_PATIENT_API = false;
+const ENABLE_PATIENT_API = Boolean(REMOTE_PATIENT_API_URL);
 
 function readStoredHistory() {
   try {
@@ -1036,7 +1038,8 @@ function setModelApiStatus(text, tone = "neutral") {
   if (!modelApiStatus) return;
   const studentTextMap = {
     模型API请求中: "生成参考分层中",
-    Railway模型已接入: "参考分层已生成",
+    已配置远程模型: "等待参考分层",
+    远程模型已接入: "参考分层已生成",
     模型服务已接入: "参考分层已生成",
     本地模型已接入: "参考分层已生成",
     "模型未配置·本地规则": "本地规则参考",
@@ -1225,7 +1228,7 @@ async function analyzeCaseWithModel(text) {
         const remoteModelResult = await postJson(REMOTE_UC_MODEL_API_URL, modelPayload);
         const merged = mergeModelAnalysis(localAnalysis, remoteModelResult);
         state.modelApiSource = "remote-api";
-        setModelApiStatus("Railway模型已接入", "success");
+        setModelApiStatus("远程模型已接入", "success");
         return merged;
       } catch (remoteError) {
         console.info("Remote UC model API fallback:", remoteError.message);
@@ -1469,7 +1472,7 @@ function localPatientAnswer(profile, matchedKey) {
 async function callPatientApi({ question, matchedKey }) {
   const sample = samples[state.activeCase];
   const profile = getPatientProfile();
-  return postJson("/.netlify/functions/patient-chat", {
+  return postJson(REMOTE_PATIENT_API_URL || "/.netlify/functions/patient-chat", {
     caseKey: state.activeCase,
     caseLabel: sample ? sample.label : "自定义病例",
     caseText: caseInput.value,
@@ -2266,29 +2269,6 @@ function buildRubric(correct) {
   const lowInfoPenalty = Math.max(0, 70 - coverage.percent) * 0.45;
   const essentialKeys = ["stool", "blood", "pain", "night", "medication", "exam"];
   const essentialCovered = essentialKeys.filter((key) => asked.has(key)).length;
-  const historyScore = Math.round(clamp(12 + coverage.percent * 0.78 + (asked.has("overview") ? 4 : 0), 10, 95));
-  const westernClueScore = Math.round(clamp(24 + essentialCovered * 8 + Math.min(hitCount, 5) * 4 - lowInfoPenalty * 0.5, 15, 95));
-  const reasoningScore = Math.round(clamp((correct ? 66 : 42) + essentialCovered * 4 + Math.min(hitCount, 4) * 3 - lowInfoPenalty, 20, 92));
-  const fourDiagnosisScore = Math.round(clamp(
-    18 + Math.min(tcmRows.length, 4) * 10 + (asked.has("tongue") ? 10 : 0) + (tcmEval.evidenceHit ? 8 : 0) - (coverage.percent < 35 ? 8 : 0),
-    15,
-    94,
-  ));
-  const syndromeScore = Math.round(clamp(
-    20 + tcmEval.matchCount * 14 + tcmEval.reasonedCount * 7 + (evidenceCitationHit ? 10 : 0) - (conflict.level === "warn" && tcmEval.matchCount < 2 ? 8 : 0),
-    15,
-    94,
-  ));
-  const integrationScore = Math.round(clamp(
-    18 + essentialCovered * 5 + Math.min(tcmRows.length, 4) * 6 + (evidenceCitationHit ? 10 : 0) + (evidenceSentenceHit ? 8 : 0) - (coverage.percent < 50 ? 10 : 0),
-    15,
-    95,
-  ));
-  const safetyScore = Math.round(clamp(
-    18 + (asked.has("medication") ? 16 : 0) + (asked.has("exam") ? 14 : 0) + (asked.has("night") ? 6 : 0) + (tcmEval.safetyHit ? 22 : 0) + (correct ? 4 : 0),
-    15,
-    92,
-  ));
   const coverageLevel = coverage.percent >= 70 ? "本达标" : coverage.percent >= 50 ? "需补强": "显不足";
   const weighted = (label, rawScore, weight, feedback) => ({
     label,
@@ -2297,6 +2277,46 @@ function buildRubric(correct) {
     weight,
     feedback,
   });
+
+  if (!state.interview.length) {
+    return [
+      weighted("病史采集", 0, 20, "尚未开始虚拟问诊，本项暂不计分。"),
+      weighted("西医线索", 0, 15, "尚未采集活动度线索，本项暂不计分。"),
+      weighted("床推理", 0, 20, "尚未完成问诊取证，本项暂不计分。"),
+      weighted("诊证据", 0, 10, "尚未完成四诊相关取证，本项暂不计分。"),
+      weighted("辨证论治", 0, 15, "尚未形成辨证依据，本项暂不计分。"),
+      weighted("西医整合", 0, 10, "尚未形成中西医整合证据链，本项暂不计分。"),
+      weighted("安全沟通", 0, 10, "尚未追问检查、用药或复诊安全信息，本项暂不计分。"),
+    ];
+  }
+
+  const historyScore = Math.round(clamp(12 + coverage.percent * 0.78 + (asked.has("overview") ? 4 : 0), 0, 95));
+  const westernClueScore = Math.round(clamp(24 + essentialCovered * 8 + Math.min(hitCount, 5) * 4 - lowInfoPenalty * 0.5, 0, 95));
+  const reasoningScore = Math.round(clamp((correct ? 66 : 42) + essentialCovered * 4 + Math.min(hitCount, 4) * 3 - lowInfoPenalty, 0, 92));
+  const fourDiagnosisScore = tcmEval.hasAnyInput
+    ? Math.round(clamp(
+        18 + Math.min(tcmRows.length, 4) * 10 + (asked.has("tongue") ? 10 : 0) + (tcmEval.evidenceHit ? 8 : 0) - (coverage.percent < 35 ? 8 : 0),
+        0,
+        94,
+      ))
+    : 0;
+  const syndromeScore = tcmEval.hasAnyInput
+    ? Math.round(clamp(
+        20 + tcmEval.matchCount * 14 + tcmEval.reasonedCount * 7 + (evidenceCitationHit ? 10 : 0) - (conflict.level === "warn" && tcmEval.matchCount < 2 ? 8 : 0),
+        0,
+        94,
+      ))
+    : 0;
+  const integrationScore = Math.round(clamp(
+    18 + essentialCovered * 5 + Math.min(tcmRows.length, 4) * 6 + (evidenceCitationHit ? 10 : 0) + (evidenceSentenceHit ? 8 : 0) - (coverage.percent < 50 ? 10 : 0),
+    0,
+    95,
+  ));
+  const safetyScore = Math.round(clamp(
+    (asked.has("medication") ? 16 : 0) + (asked.has("exam") ? 14 : 0) + (asked.has("night") ? 6 : 0) + (tcmEval.safetyHit ? 22 : 0) + (correct ? 4 : 0),
+    0,
+    92,
+  ));
 
   return [
     weighted("病史采集", historyScore, 20, `参照病史采集/医学面谈要求：已覆盖${coverage.covered}/${coverage.total}个核心问诊点，信息采集${coverageLevel}。`),
@@ -2373,6 +2393,14 @@ async function submitJudgement() {
     feedbackTitle.textContent = "尚未选择学生判断";
     feedbackText.textContent = "请先选择低风险、中风险或高风险，再提交训练反馈。";
     setRoute("feedback");
+    return;
+  }
+  if (!state.interview.length) {
+    feedbackStatus.textContent = "请先问诊";
+    feedbackStatus.className = "pill warn";
+    feedbackTitle.textContent = "尚未开始虚拟问诊";
+    feedbackText.textContent = "请至少完成 1 轮虚拟问诊后再提交判断，否则系统不会形成有效的形成性评价。";
+    setRoute("interview");
     return;
   }
   collectTcmAnswer();
@@ -2755,6 +2783,7 @@ function textMatchesAny(text, patterns = []) {
 function evaluateTcmAnswer(answer = state.tcmAnswer) {
   const expected = expectedTcmByCase[state.activeCase] || expectedTcmByCase.boundary;
   const filledCount = [answer.syndrome, answer.method, answer.formula].filter((item) => item.length >= 2).length;
+  const hasAnyInput = [answer.syndrome, answer.method, answer.formula, answer.safety].some((item) => item.length >= 2);
   const evidenceText = [answer.syndrome, answer.method, answer.formula].join(" ");
   const reasonedCount = [answer.syndrome, answer.method, answer.formula].filter((item) => item.length >= 8 && /因为|由于|提示|支持|依据|结合|可见|考虑|所以/.test(item)).length;
   const evidenceHit = /黏液|脓血|便血|里急后重|腹痛|夜间|停药|漏服|舌|苔|脉|发热|乏力|纳食|粪钙|CRP|内镜|信息不足/.test(evidenceText);
@@ -2764,13 +2793,15 @@ function evaluateTcmAnswer(answer = state.tcmAnswer) {
     textMatchesAny(answer.formula, expected.formulaPatterns),
   ].filter(Boolean).length;
   const safetyHit = /就医|复诊|急诊|红旗|脱水|发热|便血加重|加重.*就医|信息不足|不能.*处方|禁忌|风险|医生|医师|复核|审核/.test(answer.safety);
-  const score = Math.round(clamp(18 + matchCount * 18 + filledCount * 4 + reasonedCount * 5 + (evidenceHit ? 7 : 0) + (safetyHit ? 12 : 0), 20, 94));
+  const score = hasAnyInput
+    ? Math.round(clamp(18 + matchCount * 18 + filledCount * 4 + reasonedCount * 5 + (evidenceHit ? 7 : 0) + (safetyHit ? 12 : 0), 0, 94))
+    : 0;
   const summary = [
     `学生辨证：${answer.syndrome || "填写"}；治法：${answer.method || "填写"}；方剂思路：${answer.formula || "填写"}。`,
     `参考方向：${expected.syndromeLabel}；${expected.methodLabel}；${expected.formulaLabel}。`,
     expected.rationale,
   ];
-  return { score, matchCount, filledCount, reasonedCount, evidenceHit, safetyHit, expected, summary };
+  return { score, matchCount, filledCount, reasonedCount, evidenceHit, safetyHit, expected, summary, hasAnyInput };
 }
 
 function loadSample(key) {
@@ -2780,7 +2811,7 @@ function loadSample(key) {
   state.rubric = [];
   resetTcmAnswer();
   state.patientApiSource = "local";
-  state.modelApiSource = "local";
+  state.modelApiSource = REMOTE_UC_MODEL_API_URL ? "remote-configured" : "local";
   const sample = samples[key];
   caseInput.value = sample.text;
   caseLabel.textContent = sample.label;
@@ -2789,7 +2820,7 @@ function loadSample(key) {
   parseStatus.textContent = "提交后生成";
   parseStatus.className = "pill neutral";
   setPatientApiStatus("本地患者话术", "neutral");
-  setModelApiStatus("本地规则分层", "neutral");
+  setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   riskBadge.textContent = "等待分析";
   riskBadge.className = "risk-badge";
   tagCloud.innerHTML = "";
@@ -2824,7 +2855,7 @@ function resetCustomCase() {
   state.interview = [];
   resetTcmAnswer();
   state.patientApiSource = "local";
-  state.modelApiSource = "local";
+  state.modelApiSource = REMOTE_UC_MODEL_API_URL ? "remote-configured" : "local";
   caseInput.value = "";
   caseLabel.textContent = "自定义病例";
   document.querySelectorAll(".case-tab").forEach((tab) => tab.classList.remove("active"));
@@ -2832,7 +2863,7 @@ function resetCustomCase() {
   parseStatus.textContent = "请输入病例";
   parseStatus.className = "pill warn";
   setPatientApiStatus("本地患者话术", "neutral");
-  setModelApiStatus("本地规则分层", "neutral");
+  setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   tagCloud.innerHTML = "";
   structuredTable.innerHTML = "";
   resetExplainPanel();
