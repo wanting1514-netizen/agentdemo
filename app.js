@@ -2124,6 +2124,97 @@ function renderModelFigure() {
   modelFigureNote.textContent = modelAsset.note;
 }
 
+function renderShapFallback(imgEl) {
+  if (!imgEl) return;
+  imgEl.classList.add("hidden");
+  const canvas = document.getElementById("shapFallbackCanvas");
+  if (!canvas) return;
+  canvas.classList.remove("hidden");
+  const ctx = canvas.getContext("2d");
+  const W = 780, H = 360;
+
+  /* 高DPI缩放 */
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  /* 背景 */
+  ctx.fillStyle = "#f9fbf8";
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, H, 14);
+  ctx.fill();
+
+  /* 标题 */
+  ctx.fillStyle = "#1a3d2b";
+  ctx.font = "bold 15px -apple-system, sans-serif";
+  ctx.fillText("证据贡献度分析（动态生成）", 18, 30);
+
+  /* 提示 */
+  ctx.fillStyle = "#7a8a80";
+  ctx.font = "11px -apple-system, sans-serif";
+  ctx.fillText("SHAP图片未加载，自动生成贡献条作为替代", 18, 48);
+
+  /* 获取证据数据 */
+  const rows = inputEvidenceRows().slice(0, 6);
+  if (!rows.length) {
+    ctx.fillStyle = "#7a8a80";
+    ctx.font = "14px -apple-system, sans-serif";
+    ctx.fillText("暂无证据数据，请先完成问诊", 20, 100);
+    return;
+  }
+
+  const maxWeight = Math.max(...rows.map((r) => Math.abs(r.weight)), 1);
+  const barH = 24;
+  const gap = 10;
+  const startY = 66;
+  const labelW = 110;
+  const barMaxW = W - labelW - 70;
+
+  rows.forEach((row, i) => {
+    const y = startY + i * (barH + gap);
+    const absW = Math.abs(row.weight);
+    const barW = Math.max((absW / maxWeight) * barMaxW, 4);
+    const isPos = row.weight >= 0;
+
+    /* 标签 */
+    ctx.fillStyle = "#1a3d2b";
+    ctx.font = "12px -apple-system, sans-serif";
+    ctx.textAlign = "right";
+    const label = row.label.length > 8 ? row.label.slice(0, 7) + "\u2026" : row.label;
+    ctx.fillText(label, labelW - 8, y + 16);
+
+    /* 条形 */
+    const barX = labelW;
+    const gradient = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    if (isPos) {
+      gradient.addColorStop(0, "#c8884b");
+      gradient.addColorStop(1, "#e0a86a");
+    } else {
+      gradient.addColorStop(0, "#1f6f58");
+      gradient.addColorStop(1, "#3da385");
+    }
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, y, barW, barH, 4);
+    ctx.fill();
+
+    /* 数值 */
+    ctx.fillStyle = isPos ? "#c8884b" : "#1f6f58";
+    ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText((isPos ? "+" : "-") + absW, barX + barW + 6, y + 16);
+
+    /* 角标 */
+    if (row.badge) {
+      ctx.fillStyle = "#9aaca0";
+      ctx.font = "10px -apple-system, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(row.badge, W - 14, y + 16);
+    }
+  });
+}
+
 function renderContributionChart(analysis) {
   contributionChart.innerHTML = "";
   renderModelFigure();
