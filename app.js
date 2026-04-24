@@ -1027,10 +1027,7 @@ function setRoute(route, options = {}) {
   location.hash = nextRoute;
   if (nextRoute === "history") renderHistory();
   if (nextRoute === "interview") renderInterview();
-  if (nextRoute === "judgement" && !state.selectedAnswer) {
-    riskBadge.textContent = "等待判断";
-    riskBadge.className = "risk-badge";
-  }
+  if (nextRoute === "judgement") renderRiskBadge();
   syncPostAnswerAccess();
   applyModeHints();
 }
@@ -2398,6 +2395,16 @@ function averageRubricScore(rubric = state.rubric) {
   return Math.round(rubric.reduce((sum, item) => sum + item.score, 0));
 }
 
+function renderRiskBadge() {
+  if (!state.selectedAnswer || !state.rubric.length || !state.analysis) {
+    riskBadge.textContent = state.selectedAnswer ? "等待提交" : "等待判断";
+    riskBadge.className = "risk-badge";
+    return;
+  }
+  riskBadge.textContent = state.analysis.risk.level;
+  riskBadge.className = `risk-badge ${state.analysis.risk.key}`;
+}
+
 async function renderAnalysis(options = {}) {
   const { force = false } = options;
   const text = analysisTextWithInterview();
@@ -2425,8 +2432,7 @@ async function renderAnalysis(options = {}) {
   state.analysis = await analyzeCaseWithModel(text);
   parseStatus.textContent = "已解析";
   parseStatus.className = "pill success";
-  riskBadge.textContent = state.analysis.risk.level;
-  riskBadge.className = `risk-badge ${state.analysis.risk.key}`;
+  renderRiskBadge();
   renderTags(state.analysis);
   renderStructured(state.analysis.extractionRows);
   renderContributionChart(state.analysis);
@@ -2903,8 +2909,7 @@ function loadSample(key) {
   parseStatus.className = "pill neutral";
   setPatientApiStatus("本地患者话术", "neutral");
   setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
-  riskBadge.textContent = "等待分析";
-  riskBadge.className = "risk-badge";
+  renderRiskBadge();
   tagCloud.innerHTML = "";
   structuredTable.innerHTML = "";
   evidenceList.innerHTML = "";
@@ -3133,6 +3138,7 @@ document.querySelectorAll(".choice-btn").forEach((btn) => {
     state.selectedAnswer = btn.dataset.answer;
     document.querySelectorAll(".choice-btn").forEach((item) => item.classList.remove("selected"));
     btn.classList.add("selected");
+    renderRiskBadge();
   });
 });
 
