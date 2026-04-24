@@ -1015,6 +1015,7 @@ function setRoute(route, options = {}) {
     parseStatus.className = "pill neutral";
   }
   state.route = nextRoute;
+  document.body.dataset.route = nextRoute;
   document.querySelectorAll(".page-view").forEach((view) => {
     view.classList.toggle("active", view.id === `page-${nextRoute}`);
   });
