@@ -1032,7 +1032,10 @@ function setRoute(route, options = {}) {
     initSubSteps("page-judgement");
   }
   if (nextRoute === "feedback") initSubSteps("page-feedback");
-  if (nextRoute === "explain") initSubSteps("page-explain");
+  if (nextRoute === "explain") {
+    initSubSteps("page-explain");
+    if (state.analysis) renderContributionChart(state.analysis);
+  }
   syncPostAnswerAccess();
   applyModeHints();
 }
@@ -2937,7 +2940,32 @@ function updateDashboard(status) {
           : "未开始";
   if (dashboardCase) dashboardCase.textContent = sample ? sample.label.replace("病例", "").trim() || sample.label : "自定义";
   if (dashboardState) dashboardState.textContent = dashboardEntryText || status || (state.analysis ? "已完成" : "等待开始");
+  /* 更新进度条完成状态 */
+  updateProgressBar();
   refreshStudentHomePrimary();
+}
+
+function updateProgressBar() {
+  const steps = document.querySelectorAll(".dash-prog-step");
+  if (!steps.length) return;
+  const checks = [
+    true,                          /* 病例：始终载入 */
+    state.interview.length > 0,    /* 问诊：至少1轮 */
+    !!state.selectedAnswer,        /* 作答：已选风险 */
+    !!state.analysis,              /* 解析：已生成 */
+    state.rubric.length > 0,       /* 反馈：量规已生成 */
+    !!state.analysis,              /* 图谱：同解析 */
+  ];
+  steps.forEach((step, i) => {
+    step.classList.toggle("completed", checks[i] || false);
+    step.classList.toggle("active", false);
+  });
+  /* 当前所在步骤高亮 */
+  const routeOrder = ["dashboard", "cases", "interview", "judgement", "analysis", "feedback", "explain"];
+  const currentIdx = routeOrder.indexOf(state.route);
+  if (currentIdx > 0 && currentIdx - 1 < steps.length) {
+    steps[currentIdx - 1].classList.add("active");
+  }
 }
 
 function answerText(value) {
@@ -3958,7 +3986,7 @@ function renderTeacherHome() {
   if (pendingEl) {
     pendingEl.innerHTML = "";
     if (!pending.length) {
-      pendingEl.innerHTML = '<div class="empty-chart compact-empty">当前没有优先复盘项。</div>';
+      pendingEl.innerHTML = '<div class="empty-chart compact-empty">暂无可复盘记录。<br><small style="color:#9aaca0">请先让学生完成一次训练，或在考试模式发布任务后再查看。</small></div>';
     } else {
       pending.slice(0, 2).forEach((st) => {
         const card = document.createElement("button");
@@ -4123,7 +4151,17 @@ function populateReviewSelector() {
     });
     sel.appendChild(og);
   });
-  if (current) sel.value = current;
+  if (current) {
+    sel.value = current;
+  } else if (sel.options.length > 1) {
+    /* 默认选中第一个有效选项 */
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value) {
+        sel.value = sel.options[i].value;
+        break;
+      }
+    }
+  }
 }
 function findStudentById(id) {
   for (const c of readClassMock()) {

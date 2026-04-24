@@ -2822,19 +2822,23 @@ tr.clickable-row:hover {
   .case-tab,
   .choice-btn,
   .flow-step {
-    min-height: 38px;
-    padding: 8px 11px;
+    min-height: 32px;
+    padding: 6px 10px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
     text-align: center;
     scroll-snap-align: start;
   }
 
   .step-badge {
-    width: 18px;
-    height: 18px;
-    font-size: 11px;
+    display: none;
+  }
+
+  .nav-item.flow-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
   }
 
   .main-app {
@@ -3254,31 +3258,32 @@ tr.clickable-row:hover {
     position: sticky;
     top: 0;
     z-index: 40;
-    margin: 0 -10px 10px;
-    padding: 10px 10px 8px;
+    margin: 0 -10px 6px;
+    padding: 6px 10px 4px;
     border-top: 0;
     border-right: 0;
     border-left: 0;
-    border-radius: 0 0 18px 18px;
+    border-radius: 0 0 14px 14px;
     background: rgba(255, 252, 244, 0.96);
-    box-shadow: 0 10px 28px rgba(31, 56, 47, 0.12);
+    box-shadow: 0 8px 20px rgba(31, 56, 47, 0.08);
     backdrop-filter: blur(18px);
   }
 
   body:not([data-route="interview"]) .brand-block {
-    min-height: 30px;
-    padding: 0 2px;
+    min-height: 24px;
+    padding: 0;
+    gap: 6px;
   }
 
   body:not([data-route="interview"]) .brand-dot {
-    width: 10px;
-    height: 10px;
-    box-shadow: 0 0 0 6px rgba(184, 95, 66, 0.12);
+    width: 8px;
+    height: 8px;
+    box-shadow: 0 0 0 4px rgba(184, 95, 66, 0.12);
   }
 
   body:not([data-route="interview"]) .brand-block strong {
-    font-size: 17px;
-    line-height: 1.1;
+    font-size: 14px;
+    line-height: 1;
   }
 
   body:not([data-route="interview"]) .brand-block small {
@@ -3798,6 +3803,15 @@ tr.clickable-row:hover {
   background: rgba(31, 111, 88, 0.14);
   color: var(--green-dark);
   font-weight: 700;
+}
+
+.dash-prog-step.completed {
+  background: rgba(31, 111, 88, 0.12);
+  color: var(--green);
+  font-weight: 700;
+}
+.dash-prog-step.completed::before {
+  content: "\2713\00a0";
 }
 
 @media (max-width: 640px) {
