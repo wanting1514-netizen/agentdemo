@@ -498,7 +498,7 @@ const routeTitle = document.querySelector("#routeTitle");
 const routeEyebrow = document.querySelector("#routeEyebrow");
 const dashboardCase = document.querySelector("#dashboardCase");
 const dashboardState = document.querySelector("#dashboardState");
-const dashboardRisk = document.querySelector("#dashboardRisk");
+// const dashboardRisk removed - merged into dashboardState
 const explainStatus = document.querySelector("#explainStatus");
 const modelFigureTitle = document.querySelector("#modelFigureTitle");
 const modelFigureMeta = document.querySelector("#modelFigureMeta");
@@ -2179,7 +2179,7 @@ function renderContributionChart(analysis) {
           <strong>${escapeHtml(item.label)}</strong>
           <span>${escapeHtml(item.badge)}</span>
         </div>
-        <p class="evidence-source">${escapeHtml(item.source)}：${escapeHtml(item.quote)}</p>
+        <p class="evidence-quote">${escapeHtml(item.quote)}</p>
         <p class="evidence-meaning">${escapeHtml(item.meaning)}</p>
       `;
       contributionChart.appendChild(card);
@@ -2824,9 +2824,8 @@ function updateDashboard(status) {
         : state.interview.length
           ? "待作答"
           : "未开始";
-  if (dashboardCase) dashboardCase.textContent = sample ? sample.label : "自定义病例";
-  if (dashboardState) dashboardState.textContent = status || (state.analysis ? "已完成解析": "等待问诊");
-  if (dashboardRisk) dashboardRisk.textContent = dashboardEntryText;
+  if (dashboardCase) dashboardCase.textContent = sample ? sample.label.replace("病例", "").trim() || sample.label : "自定义";
+  if (dashboardState) dashboardState.textContent = dashboardEntryText || status || (state.analysis ? "已完成" : "等待开始");
   refreshStudentHomePrimary();
 }
 
@@ -3474,18 +3473,18 @@ function writeExamSubmission(sub) {
 function refreshStudentHomePrimary(pendingExams = null, completedExams = null) {
   const titleEl = document.querySelector("#studentPrimaryTitle");
   const metaEl = document.querySelector("#studentPrimaryMeta");
-  const hintEl = document.querySelector("#studentPrimaryHint");
   const btn = document.querySelector("#studentPrimaryBtn");
-  if (!titleEl || !metaEl || !hintEl || !btn) return;
+  if (!titleEl || !metaEl || !btn) return;
   const allExams = readPendingExams();
   const exams = pendingExams || allExams.filter((exam) => !hasCompletedExam(exam.id));
   const doneExams = completedExams || allExams.filter((exam) => hasCompletedExam(exam.id));
   const sample = samples[state.activeCase];
   const caseName = sample ? sample.label : "自定义病例";
+  const hintEl = document.querySelector("#studentPrimaryHint");
   const setPrimary = (title, meta, hint, label, handler) => {
     titleEl.textContent = title;
     metaEl.textContent = meta;
-    hintEl.textContent = hint;
+    if (hintEl) hintEl.textContent = hint;
     btn.textContent = label;
     btn.disabled = false;
     btn.onclick = handler;

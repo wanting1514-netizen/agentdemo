@@ -1159,6 +1159,14 @@ body[data-mode="exam"] .question-bank-panel {
   color: rgba(13, 37, 32, 0.72);
 }
 
+.evidence-quote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(13, 37, 32, 0.60);
+  padding: 0 0 0 4px;
+}
+
 .evidence-meaning {
   color: var(--muted);
 }
@@ -3706,6 +3714,96 @@ tr.clickable-row:hover {
   body[data-route="judgement"] .flow-indicator {
     font-size: 11px;
   }
+}
+
+/* === 新版首页 === */
+.student-home-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compact-hero {
+  padding: 22px 24px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.compact-hero h2 {
+  margin: 4px 0 6px;
+}
+
+.compact-meta {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.dash-stat-card {
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.dash-stat-card span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.dash-stat-card strong {
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.dash-progress {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  justify-content: center;
+}
+
+.dash-prog-step {
+  flex: 1;
+  text-align: center;
+  font-size: 0.78rem;
+  padding: 6px 2px;
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(31, 111, 88, 0.05);
+  white-space: nowrap;
+}
+
+.dash-prog-step.active {
+  background: rgba(31, 111, 88, 0.14);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .compact-hero { padding: 16px; }
+  .compact-hero h2 { font-size: 26px; }
+  .dash-stats { gap: 6px; }
+  .dash-stat-card { padding: 8px; }
+  .dash-stat-card strong { font-size: 0.88rem; }
+  .dash-progress { padding: 8px 10px; }
+  .dash-prog-step { font-size: 0.7rem; padding: 5px 0; }
 }
 
 /* === 子步骤系统 === */

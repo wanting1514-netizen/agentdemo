@@ -48,31 +48,25 @@
               <small>中西医结合病例推理</small>
             </div>
           </div>
-          <nav class="app-nav">
+        <nav class="app-nav">
             <div class="nav-group" data-nav-role="student">
-              <span class="nav-group-title">学生工作台</span>
-              <button class="nav-item" data-route="dashboard">学生工作台</button>
-            </div>
-            <div class="nav-group" data-nav-role="student">
-              <span class="nav-group-title">训练流程</span>
-              <button class="nav-item flow-nav" data-route="cases"><span class="step-badge">1</span>病例库</button>
-              <button class="nav-item flow-nav" data-route="interview"><span class="step-badge">2</span>虚拟问诊</button>
-              <button class="nav-item flow-nav" data-route="judgement"><span class="step-badge">3</span>学生作答</button>
-              <button class="nav-item flow-nav" data-route="analysis"><span class="step-badge">4</span>解析复盘</button>
-              <button class="nav-item flow-nav" data-route="feedback"><span class="step-badge">5</span>反馈报告</button>
-              <button class="nav-item flow-nav" data-route="explain"><span class="step-badge">6</span>解释图谱</button>
-            </div>
-            <div class="nav-group" data-nav-role="student">
-              <span class="nav-group-title">学习记录</span>
-              <button class="nav-item" data-route="history">我的学习轨迹</button>
+              <span class="nav-group-title">导航</span>
+              <button class="nav-item" data-route="dashboard">首页</button>
+              <button class="nav-item flow-nav" data-route="cases"><span class="step-badge">1</span>病例</button>
+              <button class="nav-item flow-nav" data-route="interview"><span class="step-badge">2</span>问诊</button>
+              <button class="nav-item flow-nav" data-route="judgement"><span class="step-badge">3</span>作答</button>
+              <button class="nav-item flow-nav" data-route="analysis"><span class="step-badge">4</span>解析</button>
+              <button class="nav-item flow-nav" data-route="feedback"><span class="step-badge">5</span>反馈</button>
+              <button class="nav-item flow-nav" data-route="explain"><span class="step-badge">6</span>图谱</button>
+              <button class="nav-item flow-nav" data-route="history">学习记录</button>
             </div>
             <div class="nav-group" data-nav-role="teacher">
-              <span class="nav-group-title">教学复盘</span>
-              <button class="nav-item" data-route="teacher-home">教师工作台</button>
-              <button class="nav-item" data-route="classes">班级管理</button>
-              <button class="nav-item" data-route="builder">建课管理</button>
-              <button class="nav-item" data-route="exam">考试模式</button>
-              <button class="nav-item" data-route="teacher">教学复盘</button>
+              <span class="nav-group-title">教学</span>
+              <button class="nav-item" data-route="teacher-home">工作台</button>
+              <button class="nav-item" data-route="classes">班级</button>
+              <button class="nav-item" data-route="builder">建课</button>
+              <button class="nav-item" data-route="exam">考试</button>
+              <button class="nav-item" data-route="teacher">复盘</button>
             </div>
           </nav>
           <div class="sidebar-note">
@@ -95,57 +89,38 @@
           </header>
 
           <section id="page-dashboard" class="page-view active">
-            <div class="student-home-layout">
-              <article class="student-focus-card">
-                <p class="eyebrow">Next Learning Step</p>
+            <div class="student-home-compact">
+              <article class="hero-card compact-hero">
+                <p class="eyebrow">训练工作台</p>
                 <h2 id="studentPrimaryTitle">开始一次病例训练</h2>
-                <p id="studentPrimaryMeta">按病例阅读、虚拟问诊、独立判断、辨证思路、反馈复盘的顺序完成训练。</p>
-                <p id="studentPrimaryHint" class="compact-note">系统会在你提交判断后再开放解析、量规和解释图谱，避免一开始泄露答案。</p>
+                <p id="studentPrimaryMeta" class="compact-meta">按病例→问诊→作答→解析→反馈→图谱的顺序完成训练。</p>
                 <div class="hero-cta-row">
                   <button id="studentPrimaryBtn" class="primary-btn big-cta" type="button">开始训练</button>
-                  <button class="secondary-btn" type="button" data-go="history">学习轨迹</button>
+                  <button class="secondary-btn" type="button" data-go="history">学习记录</button>
                 </div>
               </article>
-              <article class="student-path-card">
-                <h3>训练路径</h3>
-                <div class="learning-path">
-                  <span>病例阅读</span>
-                  <span>虚拟问诊</span>
-                  <span>风险判断</span>
-                  <span>中医辨证</span>
-                  <span>反馈复盘</span>
+              <div class="dash-stats">
+                <div class="dash-stat-card">
+                  <span>当前病例</span>
+                  <strong id="dashboardCase">高风险</strong>
                 </div>
-                <p class="muted-copy compact-note">首页只提示流程，不提前展示答案、评分规则或模型解释。</p>
-              </article>
-            </div>
-            <div class="student-home-queue">
-              <article class="teacher-card compact-home-card">
-                <div class="section-title-row">
-                  <h3>考试任务</h3>
-                  <span id="studentExamBadge" class="pill neutral">暂无任务</span>
+                <div class="dash-stat-card">
+                  <span>进度</span>
+                  <strong id="dashboardState">等待开始</strong>
                 </div>
-                <div id="studentExamList" class="exam-task-list compact"></div>
-              </article>
-              <article class="teacher-card compact-home-card">
-                <div class="section-title-row">
-                  <h3>最近学习</h3>
-                  <button class="secondary-btn small-btn" type="button" data-go="history">查看</button>
+                <div class="dash-stat-card">
+                  <span>考试</span>
+                  <strong id="studentExamBadge" class="pill neutral">暂无</strong>
                 </div>
-                <div class="student-recent-grid">
-                  <div>
-                    <span>当前病例</span>
-                    <strong id="dashboardCase">高风险病例</strong>
-                  </div>
-                  <div>
-                    <span>学习状态</span>
-                    <strong id="dashboardState">等待问诊</strong>
-                  </div>
-                  <div>
-                    <span>复盘入口</span>
-                    <strong id="dashboardRisk">未完成</strong>
-                  </div>
-                </div>
-              </article>
+              </div>
+              <div class="dash-progress">
+                <span class="dash-prog-step active">病例</span>
+                <span class="dash-prog-step">问诊</span>
+                <span class="dash-prog-step">作答</span>
+                <span class="dash-prog-step">解析</span>
+                <span class="dash-prog-step">反馈</span>
+                <span class="dash-prog-step">图谱</span>
+              </div>
             </div>
           </section>
 
