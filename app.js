@@ -455,6 +455,7 @@ const state = {
   history: readStoredHistory(),
   patientApiSource: "local",
   modelApiSource: "local",
+  interviewReminder: "",
 };
 
 let examCountdownTimer = null;
@@ -994,6 +995,14 @@ function setRoute(route, options = {}) {
   if (!routeAllowedForRole(nextRoute)) {
     nextRoute = roleHomeRoute[state.role];
   }
+  if (nextRoute === "judgement" && state.role === "student" && !state.selectedAnswer && !state.interview.length) {
+    state.interviewReminder = "请先完成至少1次追问，再进入学生作答。";
+    window.alert("你还没有进行任何问诊。请至少完成 1 次核心追问后，再进入学生作答。");
+    nextRoute = "interview";
+    if (customQuestionInput) {
+      setTimeout(() => customQuestionInput.focus(), 0);
+    }
+  }
   if (shouldBlockPostAnswerRoute(nextRoute)) {
     nextRoute = "judgement";
     feedbackStatus.textContent = "提交后开放";
@@ -1395,12 +1404,17 @@ function renderInterview() {
   });
   if (interviewCoverage) interviewCoverage.textContent = `${coverage.percent}%`;
   if (interviewCoverageBar) interviewCoverageBar.style.width = `${coverage.percent}%`;
-  interviewStatus.textContent = showPostSubmitHints
-    ? (coverage.percent >= 80 ? "问诊较完整": "问诊证据不足")
-    : (state.interview.length ? "追问进行中": "等待提问");
-  interviewStatus.className = showPostSubmitHints
-    ? (coverage.percent >= 80 ? "pill success" : "pill warn")
-    : (state.interview.length ? "pill warn" : "pill neutral");
+  if (!showPostSubmitHints && !state.interview.length && state.interviewReminder) {
+    interviewStatus.textContent = state.interviewReminder;
+    interviewStatus.className = "pill warn";
+  } else {
+    interviewStatus.textContent = showPostSubmitHints
+      ? (coverage.percent >= 80 ? "问诊较完整": "问诊证据不足")
+      : (state.interview.length ? "追问进行中": "等待提问");
+    interviewStatus.className = showPostSubmitHints
+      ? (coverage.percent >= 80 ? "pill success" : "pill warn")
+      : (state.interview.length ? "pill warn" : "pill neutral");
+  }
   if (state.patientApiSource === "openai") {
     setPatientApiStatus("OpenAI患者API", "success");
   } else if (state.patientApiSource === "error") {
@@ -1508,6 +1522,7 @@ async function askQuestion(key, customText = "") {
   const prompt = interviewQuestions.find((item) => item.key === matchedKey);
   const question = normalizeText(customText || (prompt ? prompt.question : ""));
   if (!question) return;
+  state.interviewReminder = "";
   let answer = localPatientAnswer(profile, matchedKey);
   let source = "local";
   if (!ENABLE_PATIENT_API) {
@@ -1551,6 +1566,7 @@ async function askQuestion(key, customText = "") {
 
 function resetInterview() {
   state.interview = [];
+  state.interviewReminder = "";
   renderInterview();
 }
 
@@ -2885,6 +2901,7 @@ function resetCustomCase() {
   state.selectedAnswer = "";
   state.rubric = [];
   state.interview = [];
+  state.interviewReminder = "";
   resetTcmAnswer();
   state.patientApiSource = "local";
   state.modelApiSource = REMOTE_UC_MODEL_API_URL ? "remote-configured" : "local";
