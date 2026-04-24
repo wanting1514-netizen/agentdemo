@@ -3755,6 +3755,11 @@ tr.clickable-row:hover {
   background: var(--surface);
   border: 1px solid var(--line);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 72px;
 }
 
 .dash-stat-card span {
