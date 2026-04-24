@@ -3219,3 +3219,380 @@ tr.clickable-row:hover {
     font-size: 14px;
   }
 }
+
+/* Mobile app layout pass for all non-chat pages. */
+@media (max-width: 640px) {
+  body:not([data-route="interview"]) .app-shell {
+    display: block;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
+
+  body:not([data-route="interview"]) .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    margin: 0 -10px 10px;
+    padding: 10px 10px 8px;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0 0 18px 18px;
+    background: rgba(255, 252, 244, 0.96);
+    box-shadow: 0 10px 28px rgba(31, 56, 47, 0.12);
+    backdrop-filter: blur(18px);
+  }
+
+  body:not([data-route="interview"]) .brand-block {
+    min-height: 30px;
+    padding: 0 2px;
+  }
+
+  body:not([data-route="interview"]) .brand-dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 0 6px rgba(184, 95, 66, 0.12);
+  }
+
+  body:not([data-route="interview"]) .brand-block strong {
+    font-size: 17px;
+    line-height: 1.1;
+  }
+
+  body:not([data-route="interview"]) .brand-block small {
+    display: none;
+  }
+
+  body:not([data-route="interview"]) .main-app {
+    min-width: 0;
+  }
+
+  body:not([data-route="interview"]) .page-view.active {
+    padding-bottom: 12px;
+  }
+
+  body:not([data-route="interview"]) .topbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 10px;
+    padding: 8px 2px 6px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  body:not([data-route="interview"]) .topbar > div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  body:not([data-route="interview"]) .topbar .eyebrow {
+    display: none;
+  }
+
+  body:not([data-route="interview"]) .topbar h1 {
+    overflow: hidden;
+    margin: 0;
+    font-size: 23px;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body:not([data-route="interview"]) .topbar-actions {
+    width: auto;
+    flex: 0 0 auto;
+    gap: 6px;
+    overflow: visible;
+  }
+
+  body:not([data-route="interview"]) .topbar-actions .ghost-btn {
+    min-height: 32px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+
+  body:not([data-route="interview"]) #aboutBtn {
+    display: none;
+  }
+
+  .student-focus-card {
+    padding: 18px;
+    border-radius: 20px;
+    min-height: auto;
+  }
+
+  .student-focus-card .eyebrow,
+  .teacher-focus-card .eyebrow {
+    display: none;
+  }
+
+  .student-focus-card h2 {
+    font-size: 30px;
+    line-height: 1.12;
+  }
+
+  .student-focus-card p {
+    margin: 0;
+  }
+
+  .student-focus-card #studentPrimaryMeta {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .student-focus-card #studentPrimaryHint {
+    display: none;
+  }
+
+  .student-path-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .student-path-card h3,
+  .teacher-action-card h3,
+  .compact-home-card h3 {
+    font-size: 18px;
+  }
+
+  .student-home-layout,
+  .student-home-queue,
+  .teacher-home-layout,
+  .teacher-home-queue {
+    gap: 10px;
+  }
+
+  .student-home-queue,
+  .teacher-home-queue {
+    margin-top: 10px;
+  }
+
+  .compact-home-card,
+  .teacher-focus-card,
+  .teacher-action-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .student-recent-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-recent-grid div,
+  .class-metrics div,
+  .detail-block {
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  .side-panel {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .side-panel .eyebrow,
+  .side-panel h2 {
+    display: none;
+  }
+
+  .cases-grid .side-panel {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cases-grid .side-panel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .case-tab {
+    flex: 0 0 auto;
+    min-height: 38px;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .case-input-label {
+    font-size: 13px;
+  }
+
+  #caseInput {
+    min-height: 210px;
+    max-height: 42dvh;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .judgement-panel .prompt,
+  .feedback-panel > .prompt,
+  .panel > .prompt {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .choice-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .choice-row .choice-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 8px;
+    border-radius: 14px;
+  }
+
+  .tcm-task-card {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .tcm-task-card .muted-copy {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .tcm-answer-grid {
+    gap: 10px;
+  }
+
+  .tcm-answer-grid textarea {
+    min-height: 86px;
+  }
+
+  .feedback-grid,
+  .reasoning-grid,
+  .explain-grid,
+  .teacher-review-main,
+  .teacher-grid,
+  .class-grid,
+  .exam-grid,
+  .builder-grid {
+    gap: 10px;
+  }
+
+  .risk-meter strong,
+  .history-stats strong,
+  .stat-stack strong,
+  .rubric-score-card strong {
+    font-size: 24px;
+  }
+
+  .reasoning-grid h3,
+  .dual-reasoning-section h3,
+  .rubric-section h3,
+  .explain-grid h3,
+  .teacher-card h3 {
+    font-size: 18px;
+  }
+
+  .dual-reasoning-section,
+  .rubric-section {
+    margin-top: 16px;
+  }
+
+  .evidence-card,
+  .explain-card,
+  .teacher-card,
+  .risk-meter,
+  .feedback-copy,
+  .rubric-score-card,
+  .history-item {
+    border-radius: 16px;
+  }
+
+  .contribution-chart {
+    gap: 8px;
+  }
+
+  .contribution-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .history-stats,
+  .class-metrics {
+    gap: 8px;
+  }
+
+  .history-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .history-score {
+    justify-self: stretch;
+    text-align: center;
+  }
+
+  .teacher-action-list,
+  .pending-review-list,
+  .exam-control-list,
+  .exam-task-list {
+    gap: 8px;
+  }
+
+  .teacher-action-btn,
+  .pending-review-card,
+  .exam-control-card,
+  .exam-task-card {
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .review-selector {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .teacher-details summary {
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(31, 111, 88, 0.08);
+    color: var(--green-dark);
+    font-weight: 900;
+  }
+
+  .builder-form {
+    gap: 12px;
+  }
+
+  .exam-case-list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .exam-case-list span {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .flow-footer:not(:has(.flow-footer-right button:nth-child(3))) .flow-footer-right {
+    display: grid;
+    grid-template-columns: 0.88fr 1fr;
+    gap: 8px;
+  }
+
+  .flow-footer .flow-footer-right button {
+    min-height: 44px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+}
