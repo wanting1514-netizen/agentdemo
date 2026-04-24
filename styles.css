@@ -2739,6 +2739,36 @@ tr.clickable-row:hover {
   margin: 0.2rem 0;
 }
 
+/* 中医辨证参考板块 */
+#tcmGuidelineRef {
+  margin-top: 20px;
+}
+
+#tcmGuidelineRef .section-title-row {
+  margin-bottom: 10px;
+}
+
+#tcmGuidelineRef .section-title-row h3 {
+  font-size: 18px;
+}
+
+.tcm-guideline-content details,
+#tcmKnowledgeBaseDetails details {
+  margin-top: 8px;
+}
+
+.tcm-guideline-content details summary,
+#tcmKnowledgeBaseDetails summary {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  #tcmGuidelineRef .section-title-row h3 {
+    font-size: 15px;
+  }
+}
+
 /* Final mobile app polish: keep these overrides after late-added feature styles. */
 @media (max-width: 640px) {
   .app-shell {

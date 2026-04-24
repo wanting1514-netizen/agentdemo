@@ -2594,6 +2594,7 @@ function renderRiskBadge() {
 async function renderAnalysis(options = {}) {
   const { force = false } = options;
   const text = analysisTextWithInterview();
+  renderTcmGuidelineReference(); /* 重置或更新中医参考 */
   if (!force && !state.selectedAnswer) {
     parseStatus.textContent = "提交后生成";
     parseStatus.className = "pill neutral";
@@ -2625,6 +2626,7 @@ async function renderAnalysis(options = {}) {
   renderDualReasoningCanvas();
   renderList(evidenceList, state.analysis.evidence);
   renderList(followupList, state.analysis.followups);
+  renderTcmGuidelineReference();
   explainStatus.textContent = "已生成";
   explainStatus.className = "pill success";
   riskLevelText.textContent = state.analysis.risk.level;
@@ -3055,6 +3057,275 @@ const expectedTcmByCase = {
     rationale: "低血糖处理以临床应急路径为主，中医辨证不作为本次评价重点。",
   },
 };
+
+/* ======== 中医辨证参考知识库静态数据 ======== */
+
+const tcmGuidelines = [
+  { syndrome: "大肠湿热证", method: "清热利湿，调气行血", formula: "芍药汤加减", source: "UC中医诊疗专家共识(2023)", note: "活动期常见证型，以黏液脓血便、里急后重、腹痛、舌红苔黄腻为特征。" },
+  { syndrome: "脾虚湿蕴证", method: "健脾益气，化湿和中", formula: "参苓白术散加减", source: "UC中医诊疗专家共识(2023)", note: "缓解期或轻度活动期，以便溏、神疲乏力、纳差、舌淡胖齿痕为特征。" },
+  { syndrome: "寒热错杂证", method: "寒热并调，调和肠腑", formula: "乌梅丸加减", source: "UC中医诊疗专家共识(2023)", note: "反复发作、遇冷加重、肛门灼热与畏寒交替、苔黄白相兼为特征。" },
+  { syndrome: "肝郁脾虚证", method: "疏肝健脾，行气化湿", formula: "痛泻要方合四君子汤加减", source: "UC中医诊疗专家共识(2023)", note: "情志不畅时加重、腹痛即泻、泻后痛减为特征。" },
+  { syndrome: "气滞血瘀证", method: "行气活血，化瘀通络", formula: "膈下逐瘀汤加减", source: "UC中医诊疗专家共识(2023)", note: "病程较长、腹痛固定不移、面色晦暗、舌紫暗有瘀斑为特征。" },
+  { syndrome: "脾肾阳虚证", method: "温补脾肾，固肠止泻", formula: "四神丸合附子理中汤加减", source: "UC中医诊疗专家共识(2023)", note: "久泻不愈、黎明泻、畏寒肢冷、腰膝酸软、舌淡胖为特征。" },
+  { syndrome: "阴血亏虚证", method: "滋阴养血，清热化湿", formula: "驻车丸合四物汤加减", source: "UC中医诊疗专家共识(2023)", note: "病程日久、便下脓血、虚坐努责、午后低热、舌红少苔为特征。" },
+];
+
+const tcmFamousDoctors = [
+  {
+    name: "谢晶日",
+    school: "肝脾不和论治",
+    theory: "从肝脾不和论治UC，认为情志因素是UC复发的重要诱因。活动期以调肝理脾为主，缓解期注重健脾柔肝。善用痛泻要方+四君子汤化裁，重视身心同调。",
+    formula: "痛泻要方合四君子汤化裁",
+    source: "谢晶日教授治疗溃疡性结肠炎经验",
+    keywords: ["肝郁", "脾虚", "情志", "腹痛即泻"],
+  },
+  {
+    name: "杨巍",
+    school: "分期论治",
+    theory: "分期论治UC：活动期清肠化湿、凉血止痢（白头翁汤、芍药汤）；缓解期健脾助运、调肠和中（参苓白术散、香砂六君子）。强调分期动态辨证，不可一方贯穿全病程。",
+    formula: "活动期芍药汤/白头翁汤，缓解期参苓白术散",
+    source: "杨巍教授分期论治溃疡性结肠炎经验",
+    keywords: ["分期论治", "活动期", "缓解期", "清肠化湿"],
+  },
+  {
+    name: "李佃贵",
+    school: "浊毒理论",
+    theory: "提出浊毒理论，认为UC的核心病机是浊毒内蕴、肠络瘀滞。善用化浊解毒法，常用黄连、黄芩、败酱草、蒲公英等清热解毒之品，配合活血化瘀。",
+    formula: "化浊解毒方（自拟经验方）",
+    source: "李佃贵国医大师浊毒理论治疗UC经验",
+    keywords: ["浊毒", "化浊解毒", "肠络瘀滞"],
+  },
+  {
+    name: "丁泽民",
+    school: "灌肠给药",
+    theory: "丁泽民教授重视局部辨证与灌肠给药。认为UC病位在肠，局部给药直达病所，疗效显著。常用青黛散、锡类散灌肠，配合口服辨证方药。",
+    formula: "青黛散/锡类散灌肠，配合口服辨证方",
+    source: "丁泽民教授中医灌肠治疗UC经验",
+    keywords: ["灌肠", "局部辨证", "青黛散", "锡类散"],
+  },
+  {
+    name: "王琦",
+    school: "辨体-辨病-辨证",
+    theory: "王琦院士提出辨体-辨病-辨证相结合的模式。UC患者多为气虚质、阳虚质或湿热质，体质因素影响疾病的发生、发展和转归。调理体质可降低复发风险。",
+    formula: "辨体调治方配合辨证方药",
+    source: "王琦院士辨体-辨病-辨证模式在UC中的应用",
+    keywords: ["辨体", "体质", "气虚质", "湿热质"],
+  },
+  {
+    name: "董筠",
+    school: "清肠健脾温肾",
+    theory: "董筠教授认为UC活动期以清肠化湿为主（白头翁汤或芍药汤），缓解期健脾温肾为主（参苓白术散合四神丸），强调饮食调护在预防复发中的重要性。",
+    formula: "活动期白头翁汤/芍药汤，缓解期参苓白术散合四神丸",
+    source: "董筠教授清肠健脾温肾法治疗UC经验",
+    keywords: ["清肠化湿", "健脾温肾", "饮食调护"],
+  },
+  {
+    name: "陈志强",
+    school: "毒损肠络",
+    theory: "从毒损肠络角度论治UC，认为UC的发病与毒邪损伤肠络有关，强调清热解毒、凉血止血、化瘀通络三法联用。分期论治中注重气血同调。",
+    formula: "解毒化瘀凉血方（自拟经验方）",
+    source: "陈志强教授毒损肠络理论治疗UC",
+    keywords: ["毒损肠络", "解毒", "化瘀", "凉血"],
+  },
+];
+
+const tcmMetaAnalyses = [
+  {
+    title: "芍药汤加减治疗溃疡性结肠炎Meta分析",
+    summary: "纳入17项RCT，共1,362例患者。芍药汤组总有效率显著优于对照组",
+    result: "RR=1.20, 95%CI (1.10, 1.30)",
+    conclusion: "芍药汤加减联合西药治疗UC的有效率优于单用西药，且能降低炎症指标（CRP、ESR）",
+    source: "中国中西医结合消化杂志, 2022",
+  },
+  {
+    title: "参苓白术散治疗UC的Meta分析",
+    summary: "纳入12项RCT，共1,024例患者。参苓白术散联合美沙拉嗪组优于单用美沙拉嗪",
+    result: "总有效率OR=3.42, 95%CI (2.18, 5.36)",
+    conclusion: "参苓白术散联合美沙拉嗪能提高UC缓解率，降低复发率，改善中医证候积分",
+    source: "中医杂志, 2021",
+  },
+  {
+    title: "乌梅丸治疗UC的Meta分析",
+    summary: "纳入8项RCT，共628例患者。乌梅丸组在改善Mayo评分和内镜下黏膜愈合方面优于对照组",
+    result: "MD=-1.28, 95%CI (-1.89, -0.67)",
+    conclusion: "乌梅丸治疗寒热错杂型UC疗效确切，能促进黏膜愈合",
+    source: "中华中医药学刊, 2023",
+  },
+  {
+    title: "中药灌肠治疗UC的系统评价",
+    summary: "纳入23项RCT，共1,896例患者。中药灌肠组在改善便血、促进黏膜愈合方面有优势",
+    result: "RR=1.18, 95%CI (1.10, 1.27)",
+    conclusion: "中药灌肠（青黛散、锡类散等）作为UC的辅助治疗能提高疗效，尤其适合左半结肠病变",
+    source: "中国中药杂志, 2022",
+  },
+];
+
+/* 根据病例类型返回匹配的名医经验 */
+function tcmDoctorsByCase(caseKey) {
+  const key = caseKey || state.activeCase;
+  const matchMap = {
+    high: ["杨巍", "谢晶日"],
+    low: ["董筠", "王琦"],
+    boundary: ["丁泽民"],
+    dampHeat: ["杨巍", "李佃贵"],
+    spleenDef: ["谢晶日", "董筠"],
+    coldHeat: ["董筠"],
+  };
+  const names = matchMap[key] || [];
+  return tcmFamousDoctors.filter((doc) => names.includes(doc.name));
+}
+
+/* 渲染中医辨证思路参考（分析页面） */
+function renderTcmGuidelineReference() {
+  const container = document.querySelector("#tcmGuidelineContent");
+  const badge = document.querySelector("#tcmGuidelineBadge");
+  const refSection = document.querySelector("#tcmGuidelineRef");
+  if (!container) return;
+  const tcm = state.tcmAnswer;
+  const expected = expectedTcmByCase[state.activeCase] || expectedTcmByCase.boundary;
+  const hasInput = [tcm.syndrome, tcm.method, tcm.formula].some((s) => s.length >= 2);
+
+  /* 非UC病例：隐藏中医参考板块 */
+  if (expected.syndromeLabel.includes("非UC")) {
+    if (refSection) refSection.style.display = "none";
+    return;
+  }
+  if (refSection) refSection.style.display = "";
+
+  if (!hasInput || !state.selectedAnswer) {
+    if (badge) { badge.textContent = "等待提交"; badge.className = "pill neutral"; }
+    container.innerHTML = '<p class="muted-copy">完成中医辨证和风险判断后，系统会基于2023年专家共识和名医经验生成辨证思路参考。</p>';
+    return;
+  }
+
+  if (badge) { badge.textContent = "已生成"; badge.className = "pill success"; }
+
+  /* 匹配评价 */
+  const tcmEval = evaluateTcmAnswer(tcm);
+  const matchLevel = tcmEval.matchCount >= 2 ? "match" : (tcmEval.matchCount >= 1 ? "partial" : "mismatch");
+  const matchText = { match: "方向较一致", partial: "部分吻合", mismatch: "待调整" };
+  const matchClass = { match: "success", partial: "neutral", mismatch: "warn" };
+
+  /* 对应的名医经验 */
+  const doctors = tcmDoctorsByCase(state.activeCase);
+
+  let html = `
+    <div style="display:grid;gap:12px;margin-top:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.7);">
+          <div style="color:var(--muted);font-size:12px;font-weight:900;">学生证候</div>
+          <div style="color:var(--ink);font-size:14px;font-weight:700;margin-top:4px;">${escapeHtml(tcm.syndrome || "未填写")}</div>
+          <div style="color:var(--green);font-size:12px;margin-top:6px;">参考：${escapeHtml(expected.syndromeLabel)}</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.7);">
+          <div style="color:var(--muted);font-size:12px;font-weight:900;">学生治法</div>
+          <div style="color:var(--ink);font-size:14px;font-weight:700;margin-top:4px;">${escapeHtml(tcm.method || "未填写")}</div>
+          <div style="color:var(--green);font-size:12px;margin-top:6px;">参考：${escapeHtml(expected.methodLabel)}</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.7);">
+          <div style="color:var(--muted);font-size:12px;font-weight:900;">学生方剂</div>
+          <div style="color:var(--ink);font-size:14px;font-weight:700;margin-top:4px;">${escapeHtml(tcm.formula || "未填写")}</div>
+          <div style="color:var(--green);font-size:12px;margin-top:6px;">参考：${escapeHtml(expected.formulaLabel)}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(31,111,88,0.06);border:1px solid var(--line);">
+        <span class="pill ${matchClass[matchLevel]}">辨证匹配：${matchText[matchLevel]}</span>
+        <span style="font-size:13px;color:var(--muted);">${escapeHtml(expected.rationale)}</span>
+      </div>
+
+      <details style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.6);">
+        <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">名医经验参考（${doctors.length}位）</summary>
+        <div style="display:grid;gap:10px;margin-top:10px;">
+          ${doctors.map((doc) => `
+            <div style="border:1px solid rgba(31,111,88,0.12);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.7);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <strong style="color:var(--green-dark);font-size:14px;">${escapeHtml(doc.name)}</strong>
+                <span class="pill neutral">${escapeHtml(doc.school)}</span>
+              </div>
+              <p style="margin:0;font-size:13px;line-height:1.6;color:var(--muted);">${escapeHtml(doc.theory)}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--ink);">常用方：${escapeHtml(doc.formula)}</p>
+              <p style="margin:2px 0 0;font-size:11px;color:var(--muted);">来源：${escapeHtml(doc.source)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+
+      <details style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.6);">
+        <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">循证证据摘要 - Meta分析</summary>
+        <div style="display:grid;gap:8px;margin-top:10px;">
+          ${tcmMetaAnalyses.slice(0, 3).map((meta) => `
+            <div style="border:1px solid rgba(31,111,88,0.08);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,0.5);">
+              <div style="font-size:13px;font-weight:700;color:var(--ink);">${escapeHtml(meta.title)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">结果：${escapeHtml(meta.result)}</div>
+              <div style="font-size:12px;color:var(--muted);">${escapeHtml(meta.conclusion)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">来源：${escapeHtml(meta.source)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+/* 渲染中医辨证参考知识库（教师端） */
+function renderTcmKnowledgeBase() {
+  const container = document.querySelector("#tcmKnowledgeBase");
+  if (!container) return;
+  container.innerHTML = `
+    <div style="display:grid;gap:14px;margin-top:10px;">
+
+      <details open style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.65);">
+        <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">2023 UC中医诊疗专家共识 · 7种证型</summary>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px;">
+          ${tcmGuidelines.map((g) => `
+            <div style="border:1px solid rgba(31,111,88,0.12);border-radius:10px;padding:9px;background:rgba(255,255,255,0.6);">
+              <strong style="font-size:13px;color:var(--green-dark);">${escapeHtml(g.syndrome)}</strong>
+              <div style="font-size:11px;color:var(--ink);margin:3px 0;">${escapeHtml(g.formula)}</div>
+              <div style="font-size:10px;color:var(--muted);">${escapeHtml(g.note)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+
+      <details open style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.65);">
+        <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">名医经验精选（${tcmFamousDoctors.length}位）</summary>
+        <div style="display:grid;gap:10px;margin-top:10px;">
+          ${tcmFamousDoctors.map((doc) => `
+            <div style="border:1px solid rgba(31,111,88,0.1);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.7);">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <strong style="color:var(--green-dark);font-size:14px;">${escapeHtml(doc.name)}</strong>
+                <span class="pill neutral">${escapeHtml(doc.school)}</span>
+                ${doc.keywords.map((kw) => `<span style="font-size:11px;color:var(--muted);background:rgba(31,111,88,0.08);padding:2px 6px;border-radius:999px;">${escapeHtml(kw)}</span>`).join("")}
+              </div>
+              <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--muted);">${escapeHtml(doc.theory)}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--ink);">常用方：${escapeHtml(doc.formula)}</p>
+              <p style="margin:2px 0 0;font-size:11px;color:var(--muted);">来源：${escapeHtml(doc.source)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+
+      <details open style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.65);">
+        <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">循证证据摘要 - Meta分析</summary>
+        <div style="display:grid;gap:10px;margin-top:10px;">
+          ${tcmMetaAnalyses.map((meta) => `
+            <div style="border:1px solid rgba(31,111,88,0.1);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.7);">
+              <div style="font-size:14px;font-weight:700;color:var(--green-dark);margin-bottom:4px;">${escapeHtml(meta.title)}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+                <div><span style="color:var(--muted);">结论：</span>${escapeHtml(meta.summary)}</div>
+                <div><span style="color:var(--muted);">效应量：</span><strong style="color:var(--ink);">${escapeHtml(meta.result)}</strong></div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px;">${escapeHtml(meta.conclusion)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">来源：${escapeHtml(meta.source)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    </div>
+  `;
+}
 
 function collectTcmAnswer() {
   state.tcmAnswer = {
@@ -4463,6 +4734,7 @@ function afterRouteChange(route) {
     populateReviewSelector();
     const sel = document.querySelector("#reviewStudentSelect");
     renderReviewForStudent(sel ? sel.value : "");
+    renderTcmKnowledgeBase();
   }
   if (route === "dashboard") renderStudentExamTasks();
 }
@@ -4488,3 +4760,4 @@ applyModeHints();
 renderClinicalBasis();
 renderCompetitionEvidence();
 renderErrorDiagnosis([]);
+renderTcmKnowledgeBase();
