@@ -19,6 +19,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--ink);
   font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   background:
@@ -747,6 +748,7 @@ button.is-disabled {
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .structured-table {
@@ -1354,7 +1356,7 @@ body[data-mode="exam"] .question-bank-panel {
   line-height: 1.2;
 }
 
-.rubric-score-weight {
+.rubric-score-card .rubric-score-weight {
   color: var(--muted);
   font-size: 15px;
   font-weight: 800;
@@ -1701,8 +1703,20 @@ pre {
 }
 
 @media (max-width: 640px) {
+  body {
+    background:
+      radial-gradient(circle at 20% 0%, rgba(198, 144, 59, 0.16), transparent 34%),
+      radial-gradient(circle at 92% 4%, rgba(31, 111, 88, 0.18), transparent 34%),
+      linear-gradient(160deg, #fbf4e7 0%, #edf4e8 62%, #fff8eb 100%);
+  }
+
   .app-shell {
-    padding: 10px;
+    gap: 10px;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
   }
 
   .login-card,
@@ -1710,8 +1724,111 @@ pre {
   .topbar,
   .panel,
   .hero-card {
-    padding: 18px;
-    border-radius: 22px;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .login-view {
+    min-height: 100dvh;
+    align-items: start;
+    padding: max(18px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom));
+  }
+
+  .login-card {
+    margin-top: 8px;
+    padding: 22px 18px;
+  }
+
+  .login-form input,
+  .custom-question input,
+  .builder-form input,
+  textarea,
+  select {
+    min-height: 46px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .ghost-btn,
+  .login-form button {
+    min-height: 44px;
+    padding: 11px 14px;
+  }
+
+  .sidebar {
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .brand-block {
+    gap: 10px;
+  }
+
+  .brand-block strong {
+    font-size: 18px;
+  }
+
+  .brand-block small {
+    display: block;
+    max-width: 12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-note {
+    display: none;
+  }
+
+  .app-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    margin: 0 -2px -6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-group {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    border-bottom: 0;
+  }
+
+  .nav-group-title {
+    display: none;
+  }
+
+  .nav-item,
+  .case-tab,
+  .choice-btn,
+  .flow-step {
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    text-align: center;
+    scroll-snap-align: start;
+  }
+
+  .nav-item.flow-nav {
+    gap: 6px;
+  }
+
+  .step-badge {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.72rem;
   }
 
   .topbar,
@@ -1721,12 +1838,99 @@ pre {
   }
 
   .topbar-actions {
-    align-items: flex-start;
-    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topbar-actions::-webkit-scrollbar {
+    display: none;
   }
 
   h1 {
-    font-size: 38px;
+    font-size: 32px;
+    letter-spacing: 0;
+  }
+
+  h2 {
+    font-size: 26px;
+    letter-spacing: 0;
+  }
+
+  h3 {
+    font-size: 19px;
+  }
+
+  .topbar h1 {
+    font-size: 28px;
+    letter-spacing: 0;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.08em;
+  }
+
+  .student-focus-card,
+  .student-path-card,
+  .teacher-focus-card,
+  .teacher-action-card {
+    min-height: auto;
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .student-focus-card h2,
+  .teacher-focus-card h3 {
+    font-size: 28px;
+    letter-spacing: 0;
+  }
+
+  .student-home-queue .compact-home-card {
+    min-height: auto;
+  }
+
+  .learning-path {
+    grid-template-columns: repeat(5, minmax(96px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .learning-path span {
+    min-width: 96px;
+    justify-content: center;
+    padding: 10px 12px;
+    border-radius: 999px;
+  }
+
+  .learning-path span::before {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hero-cta-row,
+  .action-row,
+  .next-row,
+  .choice-row,
+  .flow-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-cta-row > button,
+  .action-row > button,
+  .next-row > button,
+  .choice-row > button,
+  .flow-row > button {
+    width: 100%;
+  }
+
+  .choice-row {
+    gap: 8px;
   }
 
   .runtime-model-grid {
@@ -1744,8 +1948,160 @@ pre {
     display: grid;
   }
 
+  .interview-layout {
+    gap: 12px;
+  }
+
+  .patient-card,
+  .chat-card,
+  .teacher-card,
+  .risk-meter,
+  .feedback-copy,
+  .rubric-score-card,
+  .history-item {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .patient-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+  }
+
+  .patient-avatar {
+    width: 46px;
+    height: 46px;
+    margin-bottom: 0;
+    border-radius: 16px;
+    font-size: 18px;
+  }
+
+  .patient-card h3,
+  .patient-card p {
+    margin: 0;
+  }
+
+  .patient-card .mini-meter,
+  .patient-card .asked-list {
+    grid-column: 1 / -1;
+  }
+
+  .chat-window {
+    min-height: 320px;
+    max-height: 54dvh;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
   .message {
-    max-width: 100%;
+    max-width: 92%;
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  .message.student {
+    max-width: 88%;
+  }
+
+  .question-bank {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .question-chip {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .custom-question {
+    gap: 8px;
+  }
+
+  .custom-question button {
+    width: 100%;
+  }
+
+  .section-title-row,
+  .exam-task-head,
+  .pending-review-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exam-control-card,
+  .exam-control-card.compact {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exam-control-card button,
+  .exam-task-actions button {
+    width: 100%;
+  }
+
+  .exam-task-actions {
+    justify-content: stretch;
+  }
+
+  .flow-footer {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.56);
+    border-color: var(--line);
+  }
+
+  .flow-footer-left,
+  .flow-footer-right {
+    width: 100%;
+  }
+
+  .flow-footer-right {
+    flex-direction: column-reverse;
+  }
+
+  .flow-footer-right button {
+    width: 100%;
+  }
+
+  .flow-indicator {
+    width: 100%;
+    text-align: center;
+  }
+
+  .rubric-score-grid,
+  .detail-grid,
+  .evidence-metrics-grid,
+  .draft-summary-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rubric-source-note {
+    font-size: 0.78rem;
+  }
+
+  .structured-table {
+    min-width: 560px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .modal-card,
+  .history-detail-body {
+    max-height: calc(100dvh - 36px);
+  }
+
+  .modal-card {
+    width: 100%;
+    border-radius: 20px;
   }
 }
 
@@ -2362,4 +2718,154 @@ tr.clickable-row:hover {
 
 .case-study-item p {
   margin: 0.2rem 0;
+}
+
+/* Final mobile app polish: keep these overrides after late-added feature styles. */
+@media (max-width: 640px) {
+  .app-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    margin: 0 -2px -6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-nav::-webkit-scrollbar,
+  .topbar-actions::-webkit-scrollbar,
+  .learning-path::-webkit-scrollbar,
+  .question-bank::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-group {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    border-bottom: 0;
+  }
+
+  .nav-group-title,
+  .sidebar-note {
+    display: none;
+  }
+
+  .nav-item,
+  .case-tab,
+  .choice-btn,
+  .flow-step {
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    text-align: center;
+    scroll-snap-align: start;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hero-cta-row,
+  .action-row,
+  .next-row,
+  .choice-row,
+  .flow-row,
+  .flow-footer-right {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-cta-row > button,
+  .action-row > button,
+  .next-row > button,
+  .choice-row > button,
+  .flow-row > button,
+  .flow-footer-right > button {
+    width: 100%;
+  }
+
+  .flow-footer {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.56);
+    border-color: var(--line);
+  }
+
+  .flow-footer-left,
+  .flow-footer-right,
+  .flow-indicator {
+    width: 100%;
+  }
+
+  .flow-indicator {
+    text-align: center;
+  }
+
+  .learning-path,
+  .question-bank {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .question-bank {
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .question-chip {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .section-title-row,
+  .exam-task-head,
+  .pending-review-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exam-control-card,
+  .exam-control-card.compact {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exam-control-card button,
+  .exam-task-actions button {
+    width: 100%;
+  }
+
+  .exam-task-actions {
+    justify-content: stretch;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-height: calc(100dvh - 36px);
+    border-radius: 20px;
+  }
+
+  .rubric-score-grid,
+  .detail-grid,
+  .evidence-metrics-grid,
+  .draft-summary-list {
+    grid-template-columns: 1fr;
+  }
 }
