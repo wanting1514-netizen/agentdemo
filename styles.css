@@ -3590,9 +3590,92 @@ tr.clickable-row:hover {
     gap: 8px;
   }
 
-  .flow-footer .flow-footer-right button {
+.flow-footer .flow-footer-right button {
     min-height: 44px;
     border-radius: 14px;
     font-size: 14px;
+  }
+
+  /* 手机端 judgement 页面优化 */
+  body[data-route="judgement"] .panel {
+    padding: 12px;
+  }
+
+  body[data-route="judgement"] .panel-head {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  body[data-route="judgement"] .panel-head h2 {
+    font-size: 18px;
+  }
+
+  body[data-route="judgement"] .risk-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  body[data-route="judgement"] .judgement-panel .prompt {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  body[data-route="judgement"] .choice-row {
+    gap: 6px;
+  }
+
+  body[data-route="judgement"] .choice-row .choice-btn {
+    min-height: 40px;
+    padding: 8px 6px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  body[data-route="judgement"] .tcm-task-card {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  body[data-route="judgement"] .tcm-task-card h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  body[data-route="judgement"] .tcm-task-card .muted-copy {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  body[data-route="judgement"] .tcm-answer-grid {
+    gap: 8px;
+  }
+
+  body[data-route="judgement"] .tcm-answer-grid label {
+    font-size: 13px;
+  }
+
+  body[data-route="judgement"] .tcm-answer-grid textarea {
+    min-height: 70px;
+    font-size: 13px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  body[data-route="judgement"] #submitJudgementBtn {
+    min-height: 44px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+
+  body[data-route="judgement"] .flow-footer {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  body[data-route="judgement"] .flow-indicator {
+    font-size: 12px;
   }
 }
