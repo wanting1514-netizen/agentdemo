@@ -1183,6 +1183,35 @@ function normalizeRiskKey(value = "") {
   return "";
 }
 
+function normalizeRubricLabel(value = "") {
+  const text = String(value).trim();
+  const exactMap = {
+    病史采集: "病史采集",
+    史采集: "病史采集",
+    西医线索: "西医线索",
+    医线索: "西医线索",
+    临床推理: "临床推理",
+    床推理: "临床推理",
+    四诊证据: "四诊证据",
+    诊证据: "四诊证据",
+    辨证论治: "辨证论治",
+    证论治: "辨证论治",
+    中西医整合: "中西医整合",
+    西医整合: "中西医整合",
+    安全沟通: "安全沟通",
+    全沟通: "安全沟通",
+  };
+  if (exactMap[text]) return exactMap[text];
+  if (text.endsWith("史采集")) return "病史采集";
+  if (text.endsWith("医线索")) return "西医线索";
+  if (text.endsWith("床推理")) return "临床推理";
+  if (text.endsWith("诊证据")) return "四诊证据";
+  if (text.endsWith("证论治")) return "辨证论治";
+  if (text.endsWith("西医整合")) return "中西医整合";
+  if (text.endsWith("全沟通")) return "安全沟通";
+  return text;
+}
+
 function riskFromProbability(probability) {
   const percent = Math.round(clamp(probability, 0, 1) * 100);
   if (probability >= 0.72) return { level: "高风险", key: "high", percent: Math.max(percent, 78) };
@@ -2252,7 +2281,11 @@ function renderRubric() {
     ].forEach(([label, weight]) => {
       const card = document.createElement("div");
       card.className = "rubric-score-card empty";
-      card.innerHTML = `<span>${label}</span><strong>--/${weight}</strong><small>提交判断后生成</small>`;
+      card.innerHTML = `
+        <div class="rubric-score-label">${escapeHtml(normalizeRubricLabel(label))}</div>
+        <strong>--<span class="rubric-score-weight">/ ${escapeHtml(weight)}</span></strong>
+        <small>提交判断后生成</small>
+      `;
       rubricScoreGrid.appendChild(card);
     });
     renderTeacherRubric();
@@ -2265,7 +2298,7 @@ function renderRubric() {
   const totalCard = document.createElement("div");
   totalCard.className = "rubric-score-card total";
   totalCard.innerHTML = `
-    <span>总分</span>
+    <div class="rubric-score-label">总分</div>
     <strong>${escapeHtml(totalScore)}分</strong>
     <div class="score-track"><div class="score-fill" style="width: ${escapeHtml(totalScore)}%"></div></div>
     <small>7个维度按权重相加，满分100分。</small>
@@ -2276,8 +2309,8 @@ function renderRubric() {
     card.className = "rubric-score-card";
     const percent = item.rawScore || Math.round((item.score / item.weight) * 100);
     card.innerHTML = `
-      <span>${escapeHtml(item.label)}</span>
-      <strong>${escapeHtml(item.score)}/${escapeHtml(item.weight)}</strong>
+      <div class="rubric-score-label">${escapeHtml(normalizeRubricLabel(item.label))}</div>
+      <strong>${escapeHtml(item.score)}<span class="rubric-score-weight">/ ${escapeHtml(item.weight)}</span></strong>
       <div class="score-track"><div class="score-fill" style="width: ${escapeHtml(percent)}%"></div></div>
       <small>${escapeHtml(item.feedback)}</small>
     `;
@@ -2560,7 +2593,7 @@ function saveTrainingHistory(correct) {
     correct,
     qualified,
     rubricAvg,
-    rubric: state.rubric.map((r) => ({ label: r.label, score: r.score })),
+    rubric: state.rubric.map((r) => ({ label: normalizeRubricLabel(r.label), score: r.score })),
     tcmAnswer: { ...state.tcmAnswer },
     weakness: coverage.percent < 50 ? "问诊覆盖不足" : missing[0] || (qualified ? "证据表达深化" : "证据链完整性不足"),
     asked: coverage,
@@ -2646,7 +2679,7 @@ function renderHistory() {
 function renderTeacherRubric() {
   teacherRubricList.innerHTML = "";
   const items = state.rubric.length
-    ? state.rubric.map((item) => `${item.label} ${item.score}分`)
+    ? state.rubric.map((item) => `${normalizeRubricLabel(item.label)} ${item.score}分`)
     : ["病史采集", "西医线索", "临床推理", "四诊证据", "辨证论治", "中西医整合", "安全沟通"];
   items.forEach((text) => {
     const span = document.createElement("span");
@@ -3953,7 +3986,7 @@ function renderReviewForSubmission(submissionId) {
   teacherRubricList.innerHTML = "";
   (sub.rubric || []).forEach((r) => {
     const span = document.createElement("span");
-    span.textContent = `${r.label} ${r.score}分`;
+    span.textContent = `${normalizeRubricLabel(r.label)} ${r.score}分`;
     teacherRubricList.appendChild(span);
   });
   const evidence = (sub.evidence || []).slice(0, 2);
@@ -4034,7 +4067,7 @@ function renderReviewForStudent(studentId) {
   teacherRubricList.innerHTML = "";
   rubricItems.forEach((r) => {
     const span = document.createElement("span");
-    span.textContent = `${r.label} ${r.score}分`;
+    span.textContent = `${normalizeRubricLabel(r.label)} ${r.score}分`;
     teacherRubricList.appendChild(span);
   });
   renderList(discussionList, [
@@ -4124,7 +4157,7 @@ function openHistoryDetail(record) {
     ? `<ul class="compact-list">${record.evidence.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`
     : '<p class="muted-copy">无关键证据</p>';
   const rubricList = (record.rubric && record.rubric.length)
-    ? `<div class="rubric-score-grid">${record.rubric.map((r) => `<div class="rubric-cell"><span>${escapeHtml(r.label)}</span><strong>${escapeHtml(r.score)}分</strong></div>`).join("")}</div>`
+    ? `<div class="rubric-score-grid">${record.rubric.map((r) => `<div class="rubric-cell"><div class="rubric-score-label">${escapeHtml(normalizeRubricLabel(r.label))}</div><strong>${escapeHtml(r.score)}分</strong></div>`).join("")}</div>`
     : '<p class="muted-copy">无量规记录</p>';
   historyDetailBody.innerHTML = `
     <div class="detail-head-row">

@@ -1323,13 +1323,45 @@ body[data-mode="exam"] .question-bank-panel {
 
 .rubric-score-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
 .rubric-score-card {
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+
+.rubric-score-label {
+  display: block;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.5;
+  letter-spacing: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.rubric-score-card strong {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.rubric-score-weight {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.rubric-score-card small {
+  line-height: 1.6;
 }
 
 .rubric-score-card.total {
@@ -2279,7 +2311,7 @@ tr.clickable-row:hover {
   flex-direction: column;
   gap: 0.15rem;
 }
-.rubric-cell span { font-size: 0.75rem; opacity: 0.75; }
+.rubric-cell .rubric-score-label { font-size: 0.75rem; opacity: 0.75; }
 .rubric-cell strong { font-size: 0.95rem; color: var(--green-dark); }
 
 .draft-summary-list {
