@@ -1,6 +1,7 @@
 window.YANCHANG_CONFIG = {
-  // GitHub Pages / static hosting default production endpoint
-  modelApiUrl: "https://modest-miracle-production-6da8.up.railway.app/predict",
+  // 留空使用本地规则分层，秒级响应
+  // 如需接入远程模型服务，填写如 "https://your-api.example.com/predict"
+  modelApiUrl: "",
   // Leave blank to use built-in scripted patient replies in the demo
   patientApiUrl: "",
 };
