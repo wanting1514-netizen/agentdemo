@@ -337,38 +337,70 @@
                 <span id="riskBadge" class="risk-badge">等待分析</span>
               </div>
               <p class="prompt">请根据病例文本和你刚才获得的问诊信息先独立判断。提交前系统不会展示解析结果，避免影响你的临床推理。</p>
-              <div class="choice-row">
-                <button class="choice-btn" data-answer="low">低风险</button>
-                <button class="choice-btn" data-answer="medium">中风险</button>
-                <button class="choice-btn" data-answer="high">高风险</button>
+              <div class="substep-progress" id="substepJudgementProgress">
+                <span class="substep-dot active"></span>
+                <span class="substep-dot"></span>
+                <span class="substep-dot"></span>
               </div>
-              <div class="tcm-task-card" id="tcmTaskCard">
-                <div class="section-title-row">
-                  <h3>中医辨证与方剂思路训练</h3>
-                  <span class="pill neutral">教学推理</span>
+              <!-- 步骤 3a：选择风险等级 -->
+              <div class="page-substep" data-step="0">
+                <h4 class="substep-title">步骤 1/3 · 风险等级判断</h4>
+                <div class="choice-row">
+                  <button class="choice-btn" data-answer="low">低风险</button>
+                  <button class="choice-btn" data-answer="medium">中风险</button>
+                  <button class="choice-btn" data-answer="high">高风险</button>
                 </div>
-                <p class="muted-copy">请先独立写出证候判断、治法和经典方思路，并说明依据。本模块只评价临床推理表达，不要求真实处方剂量。</p>
-                <div class="tcm-answer-grid">
-                  <label>
-                    <span>证候判断</span>
-                    <textarea id="tcmSyndromeSelect" rows="3" placeholder="请学生自行写出证候判断，并说明依据，例如：黏液脓血、里急后重、舌红苔腻支持……"></textarea>
-                  </label>
-                  <label>
-                    <span>治法思路</span>
-                    <textarea id="tcmMethodSelect" rows="3" placeholder="请学生自行写出治法思路，例如：清热利湿、调气行血，或先补充四诊信息后再定治法。"></textarea>
-                  </label>
-                  <label>
-                    <span>经典方思路</span>
-                    <textarea id="tcmFormulaSelect" rows="3" placeholder="请学生自行写出经典方思路与理由，例如：可讨论某方思路，但需说明为什么匹配或为什么暂不匹配。"></textarea>
-                  </label>
-                  <label>
-                    <span>安全边界</span>
-                    <textarea id="tcmSafetyText" rows="3" placeholder="请学生自行写出安全边界，例如哪些情况需要及时就医、哪些信息不足不能直接下结论。"></textarea>
-                  </label>
+                <div class="substep-actions">
+                  <span></span>
+                  <button class="primary-btn substep-next" type="button">下一步：辨证思路 →</button>
                 </div>
               </div>
-              <div class="action-row">
-                <button id="submitJudgementBtn" class="primary-btn" type="button">提交判断并生成反馈</button>
+              <!-- 步骤 3b：中医辨证与方剂思路 -->
+              <div class="page-substep hidden" data-step="1">
+                <h4 class="substep-title">步骤 2/3 · 中医辨证与方剂思路</h4>
+                <div class="tcm-task-card" id="tcmTaskCard">
+                  <div class="section-title-row">
+                    <h3>中医辨证与方剂思路训练</h3>
+                    <span class="pill neutral">教学推理</span>
+                  </div>
+                  <p class="muted-copy">请先独立写出证候判断、治法和经典方思路，并说明依据。本模块只评价临床推理表达，不要求真实处方剂量。</p>
+                  <div class="tcm-answer-grid">
+                    <label>
+                      <span>证候判断</span>
+                      <textarea id="tcmSyndromeSelect" rows="3" placeholder="请学生自行写出证候判断，并说明依据，例如：黏液脓血、里急后重、舌红苔腻支持……"></textarea>
+                    </label>
+                    <label>
+                      <span>治法思路</span>
+                      <textarea id="tcmMethodSelect" rows="3" placeholder="请学生自行写出治法思路，例如：清热利湿、调气行血，或先补充四诊信息后再定治法。"></textarea>
+                    </label>
+                    <label>
+                      <span>经典方思路</span>
+                      <textarea id="tcmFormulaSelect" rows="3" placeholder="请学生自行写出经典方思路与理由，例如：可讨论某方思路，但需说明为什么匹配或为什么暂不匹配。"></textarea>
+                    </label>
+                    <label>
+                      <span>安全边界</span>
+                      <textarea id="tcmSafetyText" rows="3" placeholder="请学生自行写出安全边界，例如哪些情况需要及时就医、哪些信息不足不能直接下结论。"></textarea>
+                    </label>
+                  </div>
+                </div>
+                <div class="substep-actions">
+                  <button class="secondary-btn substep-prev" type="button">← 上一步：风险判断</button>
+                  <button class="primary-btn substep-next" type="button">下一步：提交判断 →</button>
+                </div>
+              </div>
+              <!-- 步骤 3c：提交判断 -->
+              <div class="page-substep hidden" data-step="2">
+                <h4 class="substep-title">步骤 3/3 · 确认并提交</h4>
+                <div class="substep-summary" id="judgementSummary">
+                  <p class="muted-copy">请确认你的判断，确认后提交。</p>
+                </div>
+                <div class="action-row">
+                  <button id="submitJudgementBtn" class="primary-btn" type="button">提交判断并生成反馈</button>
+                </div>
+                <div class="substep-actions">
+                  <button class="secondary-btn substep-prev" type="button">← 上一步：辨证思路</button>
+                  <span></span>
+                </div>
               </div>
             </article>
             <div class="flow-footer">
@@ -391,47 +423,76 @@
                 </div>
                 <span id="feedbackStatus" class="pill neutral">等待作答</span>
               </div>
-              <div class="feedback-grid">
-                <div class="risk-meter">
-                  <span>系统参考分层</span>
-                  <strong id="riskLevelText">未生成</strong>
-                  <div class="meter-track">
-                    <div id="riskMeterBar" class="meter-bar"></div>
+              <div class="substep-progress" id="substepFeedbackProgress">
+                <span class="substep-dot active"></span>
+                <span class="substep-dot"></span>
+                <span class="substep-dot"></span>
+              </div>
+              <!-- 步骤 5a：风险分层与关键证据 -->
+              <div class="page-substep" data-step="0">
+                <h4 class="substep-title">步骤 1/3 · 风险分层与关键证据</h4>
+                <div class="feedback-grid">
+                  <div class="risk-meter">
+                    <span>系统参考分层</span>
+                    <strong id="riskLevelText">未生成</strong>
+                    <div class="meter-track">
+                      <div id="riskMeterBar" class="meter-bar"></div>
+                    </div>
+                    <small id="riskMeterHint">完成解析后显示训练分层。</small>
                   </div>
-                  <small id="riskMeterHint">完成解析后显示训练分层。</small>
+                  <div class="feedback-copy">
+                    <h3 id="feedbackTitle">尚未生成反馈</h3>
+                    <p id="feedbackText">请先完成虚拟问诊和学生判断。提交后系统会自动生成解析复盘与反馈量规。</p>
+                  </div>
                 </div>
-                <div class="feedback-copy">
-                  <h3 id="feedbackTitle">尚未生成反馈</h3>
-                  <p id="feedbackText">请先完成虚拟问诊和学生判断。提交后系统会自动生成解析复盘与反馈量规。</p>
+                <div class="reasoning-grid">
+                  <div>
+                    <h3>系统提示的关键证据</h3>
+                    <ul id="evidenceList"></ul>
+                  </div>
+                  <div>
+                    <h3>建议追问或补充的信息</h3>
+                    <ul id="followupList"></ul>
+                  </div>
+                </div>
+                <div class="substep-actions">
+                  <span></span>
+                  <button class="primary-btn substep-next" type="button">下一步：双轨推理 →</button>
                 </div>
               </div>
-              <div class="reasoning-grid">
-                <div>
-                  <h3>系统提示的关键证据</h3>
-                  <ul id="evidenceList"></ul>
+              <!-- 步骤 5b：中西医双轨推理 -->
+              <div class="page-substep hidden" data-step="1">
+                <h4 class="substep-title">步骤 2/3 · 中西医双轨推理画布</h4>
+                <div class="dual-reasoning-section">
+                  <div class="section-title-row">
+                    <h3>中西医双轨推理画布</h3>
+                    <span id="syndromeConflictBadge" class="pill neutral">等待生成</span>
+                  </div>
+                  <div id="dualReasoningCanvas" class="dual-reasoning-canvas">
+                    <div class="empty-chart">提交后会生成西医活动度证据链与中医辨证证据链。</div>
+                  </div>
+                  <p id="syndromeConflictText" class="muted-copy compact-note">寒热、虚实、舌脉等冲突线索会在这里提示。</p>
                 </div>
-                <div>
-                  <h3>建议追问或补充的信息</h3>
-                  <ul id="followupList"></ul>
+                <div class="substep-actions">
+                  <button class="secondary-btn substep-prev" type="button">← 上一步：风险证据</button>
+                  <button class="primary-btn substep-next" type="button">下一步：评价量规 →</button>
                 </div>
               </div>
-              <div class="dual-reasoning-section">
-                <div class="section-title-row">
-                  <h3>中西医双轨推理画布</h3>
-                  <span id="syndromeConflictBadge" class="pill neutral">等待生成</span>
+              <!-- 步骤 5c：形成性评价量规 -->
+              <div class="page-substep hidden" data-step="2">
+                <h4 class="substep-title">步骤 3/3 · 形成性评价量规</h4>
+                <div class="rubric-section">
+                  <div class="section-title-row">
+                    <h3>形成性评价量规</h3>
+                    <span id="rubricStatus" class="pill neutral">等待生成</span>
+                  </div>
+                  <p class="rubric-source-note muted-copy compact-note">总分满分 100 分，由7个维度按权重相加。量规参照 Mini-CEX 临床能力评价、医师资格实践技能考试中的病史采集/四诊信息采集/辨证论治要求，并改编为 UC 中西医结合病例推理训练。</p>
+                  <div id="rubricScoreGrid" class="rubric-score-grid"></div>
                 </div>
-                <div id="dualReasoningCanvas" class="dual-reasoning-canvas">
-                  <div class="empty-chart">提交后会生成西医活动度证据链与中医辨证证据链。</div>
+                <div class="substep-actions">
+                  <button class="secondary-btn substep-prev" type="button">← 上一步：双轨推理</button>
+                  <span></span>
                 </div>
-                <p id="syndromeConflictText" class="muted-copy compact-note">寒热、虚实、舌脉等冲突线索会在这里提示。</p>
-              </div>
-              <div class="rubric-section">
-                <div class="section-title-row">
-                  <h3>形成性评价量规</h3>
-                  <span id="rubricStatus" class="pill neutral">等待生成</span>
-                </div>
-                <p class="rubric-source-note muted-copy compact-note">总分满分 100 分，由7个维度按权重相加。量规参照 Mini-CEX 临床能力评价、医师资格实践技能考试中的病史采集/四诊信息采集/辨证论治要求，并改编为 UC 中西医结合病例推理训练。</p>
-                <div id="rubricScoreGrid" class="rubric-score-grid"></div>
               </div>
             </article>
             <div class="flow-footer">
@@ -454,13 +515,27 @@
                 </div>
                 <span id="explainStatus" class="pill neutral">等待复盘</span>
               </div>
-              <div class="explain-grid">
+              <div class="substep-progress" id="substepExplainProgress">
+                <span class="substep-dot active"></span>
+                <span class="substep-dot"></span>
+              </div>
+              <!-- 步骤 6a：内容证据链 -->
+              <div class="page-substep" data-step="0">
+                <h4 class="substep-title">步骤 1/2 · 内容证据链</h4>
                 <div class="teacher-card wide model-figure-card">
                   <h3 id="modelFigureTitle">内容证据链</h3>
                   <p id="modelFigureMeta" class="muted-copy">完成作答后，这里会汇总支持判断的关键证据。</p>
                   <img id="modelFigureImg" alt="模型SHAP组合解释图">
                   <p id="modelFigureNote" class="model-note muted-copy">请先完成问诊和作答，再查看证据复盘。</p>
                 </div>
+                <div class="substep-actions">
+                  <span></span>
+                  <button class="primary-btn substep-next" type="button">下一步：推理链与复盘 →</button>
+                </div>
+              </div>
+              <!-- 步骤 6b：证据推理链与复盘 -->
+              <div class="page-substep hidden" data-step="1">
+                <h4 class="substep-title">步骤 2/2 · 证据推理链与复盘</h4>
                 <div class="teacher-card">
                   <h3>证据推理链</h3>
                   <p class="muted-copy">查看每条证据来自哪里，以及它如何影响风险判断。</p>
@@ -471,6 +546,10 @@
                   <p id="explainNarrative" class="muted-copy">提交后会生成你的个性化复盘。</p>
                   <h3>下一步建议</h3>
                   <ul id="explainTeachingList"></ul>
+                </div>
+                <div class="substep-actions">
+                  <button class="secondary-btn substep-prev" type="button">← 上一步：证据链</button>
+                  <span></span>
                 </div>
               </div>
             </article>

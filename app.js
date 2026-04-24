@@ -1027,7 +1027,12 @@ function setRoute(route, options = {}) {
   location.hash = nextRoute;
   if (nextRoute === "history") renderHistory();
   if (nextRoute === "interview") renderInterview();
-  if (nextRoute === "judgement") renderRiskBadge();
+  if (nextRoute === "judgement") {
+    renderRiskBadge();
+    initSubSteps("page-judgement");
+  }
+  if (nextRoute === "feedback") initSubSteps("page-feedback");
+  if (nextRoute === "explain") initSubSteps("page-explain");
   syncPostAnswerAccess();
   applyModeHints();
 }
@@ -2393,6 +2398,73 @@ function buildRubric(correct) {
 function averageRubricScore(rubric = state.rubric) {
   if (!rubric.length) return 0;
   return Math.round(rubric.reduce((sum, item) => sum + item.score, 0));
+}
+
+/* 子步骤导航系统 */
+function initSubSteps(pageId) {
+  const page = document.getElementById(pageId);
+  if (!page) return;
+  page.querySelectorAll(".substep-next").forEach((btn) => {
+    btn.removeEventListener("click", substepHandler);
+    btn.addEventListener("click", substepHandler);
+  });
+  page.querySelectorAll(".substep-prev").forEach((btn) => {
+    btn.removeEventListener("click", substepHandler);
+    btn.addEventListener("click", substepHandler);
+  });
+  /* 重置到第一步 */
+  page.querySelectorAll(".page-substep").forEach((step) => step.classList.add("hidden"));
+  const first = page.querySelector(".page-substep");
+  if (first) first.classList.remove("hidden");
+  page.querySelectorAll(".substep-dot").forEach((d, i) => d.classList.toggle("active", i === 0));
+}
+
+function substepHandler(e) {
+  const btn = e.currentTarget;
+  const page = btn.closest(".page-view");
+  if (!page) return;
+  const direction = btn.classList.contains("substep-next") ? 1 : -1;
+  goSubStep(page.id, direction);
+}
+
+function goSubStep(pageId, direction) {
+  const page = document.getElementById(pageId);
+  if (!page) return;
+  const steps = page.querySelectorAll(".page-substep");
+  const dots = page.querySelectorAll(".substep-dot");
+  let current = 0;
+  steps.forEach((s, i) => { if (!s.classList.contains("hidden")) current = i; });
+  const next = current + direction;
+  if (next < 0 || next >= steps.length) return;
+  steps[current].classList.add("hidden");
+  steps[next].classList.remove("hidden");
+  if (dots.length) {
+    dots.forEach((d, i) => d.classList.toggle("active", i === next));
+  }
+  /* 进入judgement最后一步时，更新确认摘要 */
+  if (pageId === "page-judgement" && next === 2) {
+    updateJudgementSummary();
+  }
+}
+
+function updateJudgementSummary() {
+  const summary = document.getElementById("judgementSummary");
+  if (!summary) return;
+  const risk = state.selectedAnswer || "未选择";
+  const riskMap = { low: "低风险", medium: "中风险", high: "高风险" };
+  const syndrome = document.getElementById("tcmSyndromeSelect")?.value?.trim() || "未填写";
+  const method = document.getElementById("tcmMethodSelect")?.value?.trim() || "未填写";
+  const formula = document.getElementById("tcmFormulaSelect")?.value?.trim() || "未填写";
+  const safety = document.getElementById("tcmSafetyText")?.value?.trim() || "未填写";
+  summary.innerHTML = `
+    <div class="substep-summary-card">
+      <div><strong>风险判断：</strong>${riskMap[risk] || risk}</div>
+      <div><strong>证候判断：</strong>${syndrome.substring(0, 40)}${syndrome.length > 40 ? "…" : ""}</div>
+      <div><strong>治法思路：</strong>${method.substring(0, 40)}${method.length > 40 ? "…" : ""}</div>
+      <div><strong>经典方思路：</strong>${formula.substring(0, 40)}${formula.length > 40 ? "…" : ""}</div>
+      <div><strong>安全边界：</strong>${safety.substring(0, 40)}${safety.length > 40 ? "…" : ""}</div>
+    </div>
+  `;
 }
 
 function renderRiskBadge() {
