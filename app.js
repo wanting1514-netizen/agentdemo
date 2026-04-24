@@ -2093,7 +2093,6 @@ function renderRuntimeModelSummary(analysis) {
 function renderModelFigure() {
   if (!modelFigureTitle || !modelFigureMeta || !shapCanvas || !modelFigureNote) return;
   const analysis = state.analysis;
-  const modelResult = analysis && analysis.modelResult;
   renderRuntimeModelSummary(analysis);
 
   const canvas = shapCanvas;
@@ -2110,20 +2109,34 @@ function renderModelFigure() {
   ctx.roundRect(0, 0, W, H, 14);
   ctx.fill();
 
-  /* 判断标题 / 来源 / 备注 */
-  const modelAsset = modelExplanationAssets[state.activeCase];
-  const title = modelAsset ? modelAsset.title : (state.activeCase === "custom" ? "自定义病例 · 待接入模型解释图" : "证据贡献度分析");
-  const sourceLine = modelAsset ? modelAsset.source : "基于本地规则实时计算";
-  const noteLine = modelAsset ? modelAsset.note : "正式系统可由后端模型服务生成 SHAP/LIME/反事实解释";
+  /* 获取证据行，生成动态文本 */
+  const rows = inputEvidenceRows().slice(0, 6);
+  const riskLabel = analysis && analysis.risk ? analysis.risk.level : "待评估";
+  const doubleRowPos = rows.filter((r) => r.weight >= 0).length;
+  const doubleRowNeg = rows.filter((r) => r.weight < 0).length;
 
+  /* 动态标题 */
+  const title = analysis
+    ? "\u8BC1\u636E\u8D21\u732E\u5EA6\u5206\u6790 \u00B7 " + riskLabel
+    : "\u8BC1\u636E\u8D21\u732E\u5EA6\u5206\u6790";
+
+  const sourceLine = rows.length
+    ? "\u57FA\u4E8E\u672C\u6B21\u95EE\u8BCA\u5171\u8BC6\u522B " + rows.length + " \u6761\u5173\u952E\u8BC1\u636E\uFF0C\u5176\u4E2D " + doubleRowPos + " \u6761\u652F\u6301\u9AD8\u98CE\u9669\u3001" + doubleRowNeg + " \u6761\u652F\u6301\u4F4E\u98CE\u9669"
+    : "\u5B8C\u6210\u95EE\u8BCA\u540E\u7CFB\u7EDF\u4F1A\u81EA\u52A8\u8BC6\u522B\u5173\u952E\u8BC1\u636E\u5E76\u751F\u6210\u8D21\u732E\u5EA6\u5206\u6790";
+
+  const noteLine = "\u6B64\u56FE\u5C55\u793A\u6BCF\u6761\u8BC1\u636E\u5BF9\u590D\u53D1\u98CE\u9669\u5224\u65AD\u7684\u8D21\u732E\u65B9\u5411\u4E0E\u5F3A\u5EA6\uFF0C\u4EC5\u4F5C\u6559\u5B66\u590D\u76D8\u53C2\u8003\u3002";
+
+  /* 更新 HTML 元素 */
   modelFigureTitle.textContent = title;
   modelFigureMeta.textContent = sourceLine;
   modelFigureNote.textContent = noteLine;
 
+  /* 画布标题 */
   ctx.fillStyle = "#1a3d2b";
   ctx.font = "bold 16px -apple-system, sans-serif";
-  ctx.fillText("证据贡献度分析", 20, 32);
+  ctx.fillText(title, 20, 32);
 
+  /* 画布来源 */
   ctx.fillStyle = "#7a8a80";
   ctx.font = "11px -apple-system, sans-serif";
   if (sourceLine.length > 55) {
@@ -2132,7 +2145,7 @@ function renderModelFigure() {
     ctx.fillText(sourceLine, 20, 50);
   }
 
-  /* 绘制风险标签 */
+  /* 绘制风险标签（右上角） */
   if (analysis && analysis.risk) {
     const riskColors = { high: "#c8884b", medium: "#d4a351", low: "#1f6f58" };
     ctx.fillStyle = riskColors[analysis.risk.key] || "#7a8a80";
@@ -2141,13 +2154,11 @@ function renderModelFigure() {
     ctx.fillText(analysis.risk.level, W - 16, 32);
   }
 
-  /* 获取证据行 */
-  const rows = inputEvidenceRows().slice(0, 6);
   if (!rows.length) {
     ctx.fillStyle = "#7a8a80";
     ctx.font = "14px -apple-system, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("暂无证据数据，请先完成问诊或提交判断", 20, 100);
+    ctx.fillText("\u6682\u65E0\u8BC1\u636E\u6570\u636E\uFF0C\u8BF7\u5148\u5B8C\u6210\u95EE\u8BCA\u6216\u63D0\u4EA4\u5224\u65AD", 20, 100);
     return;
   }
 
@@ -2221,7 +2232,7 @@ function renderModelFigure() {
   ctx.fillStyle = "#b0bdb4";
   ctx.font = "10px -apple-system, sans-serif";
   const footY = startY + rows.length * (barH + gap) + 12;
-  ctx.fillText("\u5F53\u524D\u56FE\u7247\u4EC5\u4F5C\u4E3A\u8131\u654F\u89E3\u91CA\u6750\u6599\u53C2\u8003\uFF1B\u82E5\u5DF2\u63A5\u5165\u5B9E\u65F6\u6A21\u578B\u670D\u52A1\uFF0C\u5219\u4EE5\u672C\u6B21\u95EE\u8BCA\u751F\u6210\u7684\u89E3\u91CA\u7ED3\u679C\u4E3A\u51C6\u3002", 20, footY);
+  ctx.fillText(noteLine, 20, footY);
 }
 
 function renderContributionChart(analysis) {
