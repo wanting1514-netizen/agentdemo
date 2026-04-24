@@ -1936,12 +1936,12 @@ function tcmEvidenceRows() {
     rows.push({ key, ...data });
   };
   const rules = [
-    { key: "heat", label: "象/湿热", patterns: [/舌红|苔黄|黄腻|肛门灼热|口苦|口黏|小便.*黄|滑数|身上.*热/], badge: "象", meaning: "支持湿热蕴结或热象偏盛，需要结合便血、黏液和苔脉。", polarity: "hot" },
-    { key: "cold", label: "象", patterns: [/遇冷加重|受凉.*加重|怕冷|畏冷|生冷.*不舒服|凉的.*加重/], badge: "象", meaning: "提示寒象或寒热错杂，不能直接按单纯湿热处理。", polarity: "cold" },
-    { key: "deficiency", label: "象/脾虚", patterns: [/神疲|乏力|容易累|舌淡|淡胖|齿痕|脉细弱|劳累.*加重|久病|面色少华/], badge: "象", meaning: "提示脾虚、正虚或缓解期调护方向，需要与活动性证据区分。", polarity: "deficiency" },
-    { key: "damp", label: "象", patterns: [/苔白腻|苔黄腻|白腻|黏滞|大便.*黏|腹胀|肠鸣|口黏/], badge: "象", meaning: "提示湿邪或脾虚夹湿，是方证匹配的重要证据。", polarity: "damp" },
-    { key: "mixed", label: "热并见", patterns: [/寒热|黄白相兼|口干.*不欲.*饮|畏冷.*灼热|灼热.*畏冷/], badge: "突线索", meaning: "提示寒热错杂或证候冲突，需要学生先解释矛盾证据。", polarity: "mixed" },
-    { key: "missingTongue", label: "脉缺失", patterns: [/舌脉.*未记录|没人.*看舌|没.*把脉|脉象.*不懂|舌脉信息未记录/], badge: "补四诊", meaning: "舌脉不足时应标注信息不足，不应直接定证或匹配方剂。", polarity: "neutral" },
+    { key: "heat", label: "湿热", patterns: [/舌红|苔黄|黄腻|肛门灼热|口苦|口黏|小便.*黄|滑数|身上.*热/], badge: "火", meaning: "支持湿热蕴结或热象偏盛，需要结合便血、黏液和苔脉。", polarity: "hot" },
+    { key: "cold", label: "寒象", patterns: [/遇冷加重|受凉.*加重|怕冷|畏冷|生冷.*不舒服|凉的.*加重/], badge: "寒", meaning: "提示寒象或寒热错杂，不能直接按单纯湿热处理。", polarity: "cold" },
+    { key: "deficiency", label: "脾虚", patterns: [/神疲|乏力|容易累|舌淡|淡胖|齿痕|脉细弱|劳累.*加重|久病|面色少华/], badge: "虚", meaning: "提示脾虚、正虚或缓解期调护方向，需要与活动性证据区分。", polarity: "deficiency" },
+    { key: "damp", label: "湿象", patterns: [/苔白腻|苔黄腻|白腻|黏滞|大便.*黏|腹胀|肠鸣|口黏/], badge: "湿", meaning: "提示湿邪或脾虚夹湿，是方证匹配的重要证据。", polarity: "damp" },
+    { key: "mixed", label: "寒热并见", patterns: [/寒热|黄白相兼|口干.*不欲.*饮|畏冷.*灼热|灼热.*畏冷/], badge: "冲突", meaning: "提示寒热错杂或证候冲突，需要学生先解释矛盾证据。", polarity: "mixed" },
+    { key: "missingTongue", label: "舌脉缺失", patterns: [/舌脉.*未记录|没人.*看舌|没.*把脉|脉象.*不懂|舌脉信息未记录/], badge: "补四诊", meaning: "舌脉不足时应标注信息不足，不应直接定证或匹配方剂。", polarity: "neutral" },
   ];
   rules.forEach((rule) => {
     const found = findEvidenceMatch(rule.patterns, segments);
@@ -2007,7 +2007,7 @@ function renderDualReasoningCanvas() {
     ? rows.map((row) => `
       <li>
         <strong>${escapeHtml(row.label)}</strong>
-        <span>${escapeHtml(row.badge || "提示")}</span>
+        <span class="tcm-badge">${escapeHtml(row.badge || "提示")}</span>
         <small>${escapeHtml(makePrompt(row))}</small>
       </li>
     `).join("")

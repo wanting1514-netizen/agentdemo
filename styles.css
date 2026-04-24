@@ -1030,6 +1030,18 @@ body[data-mode="exam"] .question-bank-panel {
   font-size: 0.82rem;
 }
 
+.tcm-badge {
+  display: inline-block;
+  min-width: 24px;
+  text-align: center;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  color: #1f6f58;
+  background: rgba(31, 111, 88, 0.10);
+}
+
 .dual-track-card li small {
   color: var(--ink-soft);
   line-height: 1.5;
