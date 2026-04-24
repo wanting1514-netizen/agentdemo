@@ -3590,7 +3590,7 @@ tr.clickable-row:hover {
     gap: 8px;
   }
 
-.flow-footer .flow-footer-right button {
+  .flow-footer .flow-footer-right button {
     min-height: 44px;
     border-radius: 14px;
     font-size: 14px;
