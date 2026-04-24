@@ -3006,8 +3006,26 @@ tr.clickable-row:hover {
     display: none;
   }
 
+  body[data-route="interview"] .app-shell {
+    min-height: 100dvh;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
+
+  body[data-route="interview"] .sidebar {
+    display: none;
+  }
+
+  body[data-route="interview"] .main-app {
+    min-height: calc(100dvh - max(18px, env(safe-area-inset-top)) - max(18px, env(safe-area-inset-bottom)));
+  }
+
   body[data-route="interview"] .page-view.active {
-    padding-bottom: 92px;
+    min-height: inherit;
+    padding-bottom: 82px;
   }
 
   body[data-route="interview"] .interview-panel {
@@ -3019,59 +3037,185 @@ tr.clickable-row:hover {
   }
 
   body[data-route="interview"] .interview-panel > .panel-head {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     margin: 0 0 8px;
-    padding: 0 2px;
+    padding: 6px 2px 8px;
+    background:
+      linear-gradient(180deg, rgba(251, 244, 231, 0.96), rgba(251, 244, 231, 0.82) 74%, rgba(251, 244, 231, 0));
+    backdrop-filter: blur(14px);
   }
 
   body[data-route="interview"] .interview-panel h2 {
-    font-size: 21px;
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  body[data-route="interview"] .interview-panel .eyebrow {
+    display: none;
+  }
+
+  body[data-route="interview"] .panel-actions {
+    width: auto;
+    margin-left: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+
+  body[data-route="interview"] .panel-actions #patientApiStatus {
+    display: none;
+  }
+
+  body[data-route="interview"] .panel-actions .pill {
+    min-height: 28px;
+    padding: 5px 10px;
+    font-size: 12px;
   }
 
   body[data-route="interview"] .interview-layout {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
 
   body[data-route="interview"] .patient-card {
+    grid-template-columns: 36px minmax(0, 1fr);
     padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(255, 252, 244, 0.86);
+    border-radius: 14px;
+    background: rgba(255, 252, 244, 0.88);
     box-shadow: none;
   }
 
+  body[data-route="interview"] .patient-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 13px;
+    font-size: 16px;
+  }
+
   body[data-route="interview"] .patient-card h3 {
-    font-size: 17px;
+    font-size: 16px;
+    line-height: 1.25;
   }
 
   body[data-route="interview"] #patientIntro {
     display: -webkit-box;
     overflow: hidden;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 12px;
+    line-height: 1.45;
   }
 
   body[data-route="interview"] .chat-card {
-    padding: 10px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   body[data-route="interview"] .chat-window {
-    min-height: 50dvh;
-    max-height: 56dvh;
-    border-radius: 16px;
+    height: calc(100dvh - 254px);
+    min-height: 330px;
+    max-height: none;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.58)),
+      radial-gradient(circle at 18% 16%, rgba(198, 144, 59, 0.12), transparent 34%),
+      radial-gradient(circle at 92% 4%, rgba(31, 111, 88, 0.1), transparent 32%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  body[data-route="interview"] .message {
+    max-width: 88%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  body[data-route="interview"] .message.patient {
+    border-bottom-left-radius: 6px;
+  }
+
+  body[data-route="interview"] .message.student {
+    border-bottom-right-radius: 6px;
+  }
+
+  body[data-route="interview"] .question-bank-panel {
+    padding: 9px 10px;
+    border-radius: 14px;
+  }
+
+  body[data-route="interview"] .question-bank-panel summary {
+    font-size: 13px;
+  }
+
+  body[data-route="interview"] .question-chip {
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  body[data-route="interview"] .custom-question {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 82px;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255, 252, 244, 0.9);
+    box-shadow: 0 12px 26px rgba(31, 56, 47, 0.1);
   }
 
   body[data-route="interview"] .custom-question input {
-    min-height: 48px;
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  body[data-route="interview"] .custom-question button {
+    width: auto;
+    min-height: 42px;
+    padding: 9px 10px;
+    border-radius: 14px;
+    font-size: 13px;
   }
 
   body[data-route="interview"] .flow-footer {
-    padding: 10px;
+    position: fixed;
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: block;
+    padding: 8px;
+    border-radius: 18px;
   }
 
   body[data-route="interview"] .flow-indicator {
     display: none;
+  }
+
+  body[data-route="interview"] .flow-footer-right {
+    display: grid;
+    grid-template-columns: 0.82fr 1fr;
+    gap: 8px;
+  }
+
+  body[data-route="interview"] .flow-footer-right button {
+    min-height: 44px;
+    padding: 10px;
+    border-radius: 14px;
+    font-size: 14px;
   }
 }
