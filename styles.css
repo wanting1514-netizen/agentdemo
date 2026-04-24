@@ -1192,15 +1192,12 @@ body[data-mode="exam"] .question-bank-panel {
   background: linear-gradient(90deg, rgba(31, 111, 88, 0.6), rgba(31, 111, 88, 0.9));
 }
 
-.model-figure-card img {
+.model-figure-card canvas {
   display: block;
   width: 100%;
   margin-top: 14px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #f0f4f1;
-  min-height: 120px;
-  object-fit: contain;
 }
 
 .runtime-model-grid {
@@ -1239,16 +1236,6 @@ body[data-mode="exam"] .question-bank-panel {
 .model-note {
   margin: 12px 0 0;
   font-size: 13px;
-}
-
-#shapFallbackCanvas {
-  display: block;
-  width: 100%;
-  max-width: 780px;
-  height: auto;
-  margin-top: 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
 }
 
 .contribution-row {
