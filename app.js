@@ -614,45 +614,6 @@ const templatePresets = {
   },
 };
 
-const modelExplanationAssets = {
-  high: {
-    title: "脱敏SHAP参考图 · 高风险样本",
-    image: "./assets/model_shap_high_combo.png",
-    source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 7698；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
-  },
-  low: {
-    title: "脱敏SHAP参考图 · 低风险样本",
-    image: "./assets/model_shap_low_combo.png",
-    source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 7053；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
-  },
-  boundary: {
-    title: "脱敏SHAP参考图 · 边界样本",
-    image: "./assets/model_shap_boundary_combo.png",
-    source: "来自你的脱敏 UC 复发预测模型解释结果，示范样本 row 5570；仅作论文解释材料参考，不代表本次实时问诊输入。",
-    note: "当前图片仅作为脱敏解释材料参考；若已接入实时模型服务，则以本次问诊生成的解释结果为准。",
-  },
-  chestPain: {
-    title: "胸痛鉴别诊断 · 急性冠脉综合征风险评估",
-    image: null,
-    source: "胸痛病例暂未接入UC复发预测模型，本页以临床路径式证据链替代ML风险分层。系统会基于问诊线索生成心源性/非心源性胸痛风险评估与鉴别要点提示，供训练复盘使用。",
-    note: "选择胸痛鉴别时，系统展示基于临床路径的急性胸痛鉴别诊断训练框架，而非UC复发预测模型输出。",
-  },
-  cough: {
-    title: "慢性咳嗽鉴别 · 咳嗽变异性哮喘与上气道咳嗽综合征",
-    image: null,
-    source: "咳嗽病例暂未接入UC复发预测模型，本页以慢性咳嗽鉴别路径替代ML风险分层。系统会基于问诊线索生成咳嗽病因概率提示与检查建议，供训练复盘使用。",
-    note: "选择慢性咳嗽时，系统展示基于临床路径的慢性咳嗽鉴别诊断训练框架，而非UC复发预测模型输出。",
-  },
-  glucose: {
-    title: "低血糖应急处理 · 胰岛素治疗患者安全边界",
-    image: null,
-    source: "低血糖病例暂未接入UC复发预测模型，本页以应急处理路径替代ML风险分层。系统会基于问诊线索生成低血糖诱因分析、严重程度评估与预防建议，供训练复盘使用。",
-    note: "选择低血糖处理时，系统展示基于临床路径的低血糖应急处理训练框架，而非UC复发预测模型输出。",
-  },
-};
-
 const modelFeatureLabels = {
   age: "年龄（脱敏默认）",
   gender: "性别编码",
@@ -2616,7 +2577,12 @@ async function renderAnalysis(options = {}) {
     return;
   }
 
+  parseStatus.textContent = "正在解析 ...";
+  parseStatus.className = "pill neutral";
+  parseStatus.style.opacity = "0.7";
+
   state.analysis = await analyzeCaseWithModel(text);
+  parseStatus.style.opacity = "";
   parseStatus.textContent = "已解析";
   parseStatus.className = "pill success";
   renderRiskBadge();
@@ -2660,8 +2626,19 @@ async function submitJudgement() {
     return;
   }
   collectTcmAnswer();
+  /* 显示loading状态 */
+  parseStatus.textContent = "正在解析 ...";
+  parseStatus.className = "pill neutral";
+  parseStatus.style.opacity = "0.7";
+  feedbackStatus.textContent = "解析中 ...";
+  feedbackStatus.className = "pill neutral";
+  feedbackStatus.style.opacity = "0.7";
+
   await renderAnalysis({ force: true });
-  if (!state.analysis) return;
+  if (state.analysis) {
+    parseStatus.style.opacity = "";
+    feedbackStatus.style.opacity = "";
+  }
 
   const expected = state.analysis.risk.key;
   const correct = state.selectedAnswer === expected;
@@ -3175,6 +3152,15 @@ function tcmDoctorsByCase(caseKey) {
   return tcmFamousDoctors.filter((doc) => names.includes(doc.name));
 }
 
+/* 病例标签反向映射到key */
+function caseLabelToKey(label) {
+  if (!label) return null;
+  for (const [key, sample] of Object.entries(samples)) {
+    if (sample.label === label) return key;
+  }
+  return null;
+}
+
 /* 渲染中医辨证思路参考（分析页面） */
 function renderTcmGuidelineReference() {
   const container = document.querySelector("#tcmGuidelineContent");
@@ -3270,40 +3256,70 @@ function renderTcmGuidelineReference() {
 }
 
 /* 渲染中医辨证参考知识库（教师端） */
-function renderTcmKnowledgeBase() {
+function renderTcmKnowledgeBase(targetCaseKey) {
   const container = document.querySelector("#tcmKnowledgeBase");
   if (!container) return;
+
+  /* 确定匹配的证型和名医 */
+  const matchCaseKey = targetCaseKey && expectedTcmByCase[targetCaseKey] && !expectedTcmByCase[targetCaseKey].syndromeLabel.includes("非UC")
+    ? targetCaseKey : null;
+  const matchGuidelineLabel = matchCaseKey ? expectedTcmByCase[matchCaseKey].syndromeLabel : null;
+  const matchDoctorNames = matchCaseKey ? tcmDoctorsByCase(matchCaseKey).map((d) => d.name) : [];
+
+  const isHighlighted = (guideline) => {
+    if (!matchGuidelineLabel) return false;
+    return guideline.syndrome === "大肠湿热证" && matchGuidelineLabel.includes("湿热")
+      || guideline.syndrome === "脾虚湿蕴证" && matchGuidelineLabel.includes("脾虚")
+      || guideline.syndrome === "寒热错杂证" && matchGuidelineLabel.includes("寒热")
+      || guideline.syndrome === "肝郁脾虚证" && matchGuidelineLabel.includes("肝郁")
+      || guideline.syndrome === "气滞血瘀证" && matchGuidelineLabel.includes("血瘀")
+      || guideline.syndrome === "脾肾阳虚证" && matchGuidelineLabel.includes("阳虚")
+      || guideline.syndrome === "阴血亏虚证" && matchGuidelineLabel.includes("阴虚");
+  };
+
   container.innerHTML = `
     <div style="display:grid;gap:14px;margin-top:10px;">
 
       <details open style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.65);">
         <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">2023 UC中医诊疗专家共识 · 7种证型</summary>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px;">
-          ${tcmGuidelines.map((g) => `
-            <div style="border:1px solid rgba(31,111,88,0.12);border-radius:10px;padding:9px;background:rgba(255,255,255,0.6);">
+          ${tcmGuidelines.map((g) => {
+            const hl = isHighlighted(g);
+            const borderStyle = hl ? "2px solid var(--green)" : "1px solid rgba(31,111,88,0.12)";
+            const bgStyle = hl ? "rgba(31,111,88,0.10)" : "rgba(255,255,255,0.6)";
+            const tag = hl ? '<span style="font-size:10px;color:var(--green);font-weight:700;display:block;margin-bottom:2px;">当前病例匹配</span>' : "";
+            return `
+            <div style="border:${borderStyle};border-radius:10px;padding:9px;background:${bgStyle};">
+              ${tag}
               <strong style="font-size:13px;color:var(--green-dark);">${escapeHtml(g.syndrome)}</strong>
               <div style="font-size:11px;color:var(--ink);margin:3px 0;">${escapeHtml(g.formula)}</div>
               <div style="font-size:10px;color:var(--muted);">${escapeHtml(g.note)}</div>
-            </div>
-          `).join("")}
+            </div>`;
+          }).join("")}
         </div>
       </details>
 
       <details open style="border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,0.65);">
         <summary style="cursor:pointer;color:var(--green-dark);font-weight:900;font-size:14px;">名医经验精选（${tcmFamousDoctors.length}位）</summary>
         <div style="display:grid;gap:10px;margin-top:10px;">
-          ${tcmFamousDoctors.map((doc) => `
-            <div style="border:1px solid rgba(31,111,88,0.1);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.7);">
+          ${tcmFamousDoctors.map((doc) => {
+            const docHl = matchDoctorNames.includes(doc.name);
+            const borderStyle = docHl ? "2px solid var(--green)" : "1px solid rgba(31,111,88,0.1)";
+            const bgStyle = docHl ? "rgba(31,111,88,0.08)" : "rgba(255,255,255,0.7)";
+            const tag = docHl ? '<span style="font-size:10px;color:var(--green);font-weight:700;margin-left:auto;">当前病例匹配</span>' : "";
+            return `
+            <div style="border:${borderStyle};border-radius:12px;padding:10px 12px;background:${bgStyle};">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                 <strong style="color:var(--green-dark);font-size:14px;">${escapeHtml(doc.name)}</strong>
                 <span class="pill neutral">${escapeHtml(doc.school)}</span>
                 ${doc.keywords.map((kw) => `<span style="font-size:11px;color:var(--muted);background:rgba(31,111,88,0.08);padding:2px 6px;border-radius:999px;">${escapeHtml(kw)}</span>`).join("")}
+                ${tag}
               </div>
               <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--muted);">${escapeHtml(doc.theory)}</p>
               <p style="margin:4px 0 0;font-size:12px;color:var(--ink);">常用方：${escapeHtml(doc.formula)}</p>
               <p style="margin:2px 0 0;font-size:11px;color:var(--muted);">来源：${escapeHtml(doc.source)}</p>
-            </div>
-          `).join("")}
+            </div>`;
+          }).join("")}
         </div>
       </details>
 
@@ -4509,6 +4525,7 @@ function renderReviewForSubmission(submissionId) {
     { label: "方证表达待评", value: sub.tcmAnswer && sub.tcmAnswer.formula ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.formula ? "已写方证思路" : "需写方证依据" },
     { label: "安全边界待评", value: sub.tcmAnswer && sub.tcmAnswer.safety ? 1 : 3, hint: sub.tcmAnswer && sub.tcmAnswer.safety ? "已写安全边界" : "需写安全边界" },
   ]);
+  renderTcmKnowledgeBase(sub.examCaseKey || caseLabelToKey(sub.caseLabel));
 }
 function renderReviewForStudent(studentId) {
   const info = document.querySelector("#reviewContextInfo");
@@ -4584,6 +4601,7 @@ function renderReviewForStudent(studentId) {
     { label: consistent ? "证据依据待深化" : "风险分层与辨证均需复盘", value: consistent ? 2 : 5, hint: "课堂讨论" },
     { label: "方证匹配表达", value: 4, hint: "需写依据" },
   ]);
+  renderTcmKnowledgeBase(caseLabelToKey(student.lastCase));
 }
 
 /* ---- 考试模式发布 ---- */
@@ -4734,7 +4752,6 @@ function afterRouteChange(route) {
     populateReviewSelector();
     const sel = document.querySelector("#reviewStudentSelect");
     renderReviewForStudent(sel ? sel.value : "");
-    renderTcmKnowledgeBase();
   }
   if (route === "dashboard") renderStudentExamTasks();
 }
