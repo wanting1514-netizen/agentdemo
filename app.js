@@ -341,7 +341,7 @@ const keywordRules = [
 const interviewQuestions = [
   { key: "overview", label: "诉概述", required: false, question: "今天主要哪里不舒服？" },
   { key: "stool", label: "便频次", required: true, question: "最近大便次数和性状怎么样？" },
-  { key: "blood", label: "液脓血", required: true, question: "有没有黏液脓血或便血？" },
+  { key: "blood", label: "黏液脓血", required: true, question: "有没有黏液脓血或便血？" },
   { key: "pain", label: "痛/里急后重", required: true, question: "有没有腹痛或里急后重？" },
   { key: "night", label: "间症状", required: true, question: "夜间是否会因为便意醒来？" },
   { key: "medication", label: "药依从性", required: true, question: "近期用药是否规律，有没有停药或漏服？" },
@@ -403,7 +403,6 @@ const runtimeConfig = window.YANCHANG_CONFIG || {};
 const configText = (value) => (typeof value === "string" ? value.trim() : "");
 const REMOTE_UC_MODEL_API_URL = configText(runtimeConfig.modelApiUrl);
 const REMOTE_PATIENT_API_URL = configText(runtimeConfig.patientApiUrl);
-const ENABLE_NETLIFY_MODEL_PROXY = false;
 const ENABLE_PATIENT_API = Boolean(REMOTE_PATIENT_API_URL);
 
 function readStoredHistory() {
@@ -456,6 +455,7 @@ const state = {
   patientApiSource: "local",
   modelApiSource: "local",
   interviewReminder: "",
+  lastFocusedElement: null,
 };
 
 let examCountdownTimer = null;
@@ -986,6 +986,7 @@ function setRoute(route, options = {}) {
   routeEyebrow.textContent = routeMeta[nextRoute][0];
   routeTitle.textContent = routeMeta[nextRoute][1];
   location.hash = nextRoute;
+  document.title = `问衡 · ${routeMeta[nextRoute][1]}`;
   if (nextRoute === "history") renderHistory();
   if (nextRoute === "interview") renderInterview();
   if (nextRoute === "judgement") {
@@ -999,6 +1000,7 @@ function setRoute(route, options = {}) {
   }
   syncPostAnswerAccess();
   applyModeHints();
+  afterRouteChange(nextRoute);
 }
 
 function normalizeText(text) {
@@ -1236,13 +1238,6 @@ async function analyzeCaseWithModel(text) {
     },
   };
   try {
-    if (ENABLE_NETLIFY_MODEL_PROXY) {
-      const modelResult = await postJson("/.netlify/functions/uc-model", modelPayload);
-      const merged = mergeModelAnalysis(localAnalysis, modelResult);
-      state.modelApiSource = "api";
-      setModelApiStatus("模型服务已接入", "success");
-      return merged;
-    }
     if (REMOTE_UC_MODEL_API_URL) {
       try {
         const remoteModelResult = await postJson(REMOTE_UC_MODEL_API_URL, modelPayload);
@@ -1436,6 +1431,23 @@ function renderInterview() {
     askedClueList.appendChild(tag);
   });
   updateDashboard(state.rubric.length ? `问诊覆盖${coverage.percent}%` : (state.interview.length ? "问诊进行中": "等待问诊"));
+
+  /* 渲染引导问题按钮 */
+  const chipsContainer = document.querySelector("#questionChips");
+  if (chipsContainer) {
+    chipsContainer.innerHTML = "";
+    if (!showPostSubmitHints && state.interview.length < 6) {
+      requiredQuestionKeys().map((key) => interviewQuestions.find((item) => item.key === key)).filter(Boolean).forEach((item) => {
+        if (!asked.has(item.key)) {
+          const btn = document.createElement("button");
+          btn.className = "question-chip";
+          btn.dataset.question = item.key;
+          btn.textContent = `追问：${item.label}`;
+          chipsContainer.appendChild(btn);
+        }
+      });
+    }
+  }
 }
 
 function appendMessage(role, text) {
@@ -2585,6 +2597,18 @@ async function renderAnalysis(options = {}) {
   parseStatus.style.opacity = "";
   parseStatus.textContent = "已解析";
   parseStatus.className = "pill success";
+
+  /* 显示模型来源提示 */
+  const modelNotice = document.querySelector("#modelNotice");
+  if (modelNotice) {
+    if (state.modelApiSource === "local" && !REMOTE_UC_MODEL_API_URL) {
+      modelNotice.textContent = "当前使用本地规则分层，响应秒级。如需接入远程模型，请在 config.js 中配置 modelApiUrl。";
+      modelNotice.className = "model-notice";
+    } else {
+      modelNotice.className = "model-notice hidden";
+    }
+  }
+
   renderRiskBadge();
   renderTags(state.analysis);
   renderStructured(state.analysis.extractionRows);
@@ -3584,12 +3608,18 @@ logoutBtn.addEventListener("click", () => {
 });
 
 function openAboutModal() {
+  state.lastFocusedElement = document.activeElement;
   aboutModal.classList.remove("hidden");
   aboutModal.setAttribute("aria-hidden", "false");
+  setTimeout(() => aboutCloseBtn?.focus(), 0);
 }
 function closeAboutModal() {
   aboutModal.classList.add("hidden");
   aboutModal.setAttribute("aria-hidden", "true");
+  if (state.lastFocusedElement) {
+    state.lastFocusedElement.focus();
+    state.lastFocusedElement = null;
+  }
 }
 aboutBtn.addEventListener("click", openAboutModal);
 aboutCloseBtn.addEventListener("click", closeAboutModal);
@@ -3615,7 +3645,10 @@ if (emptyCaseBtn) {
 }
 
 analyzeBtn.addEventListener("click", () => renderAnalysis());
-resetBtn.addEventListener("click", () => loadSample(samples[state.activeCase] ? state.activeCase : "high"));
+resetBtn.addEventListener("click", () => {
+  if (!confirm("恢复当前示例将清空所有问诊和分析记录，确定继续？")) return;
+  loadSample(samples[state.activeCase] ? state.activeCase : "high");
+});
 submitJudgementBtn.addEventListener("click", submitJudgement);
 
 document.querySelectorAll(".nav-item").forEach((item) => {
@@ -3639,8 +3672,9 @@ document.querySelectorAll(".choice-btn").forEach((btn) => {
   });
 });
 
-document.querySelectorAll(".question-chip").forEach((btn) => {
-  btn.addEventListener("click", () => askQuestion(btn.dataset.question));
+document.querySelector("#questionChips")?.addEventListener("click", (e) => {
+  const chip = e.target.closest(".question-chip");
+  if (chip) askQuestion(chip.dataset.question);
 });
 
 askCustomBtn.addEventListener("click", () => {
@@ -4094,6 +4128,7 @@ function startExam(exam) {
 }
 
 function exitExamMode() {
+  if (!confirm("退出考试模式将清空当前作答和解析，确定继续？")) return;
   const resetCaseKey = samples[state.activeCase] ? state.activeCase : "high";
   state.mode = "practice";
   state.activeExam = null;
@@ -4661,6 +4696,8 @@ function openHistoryDetail(record) {
     `;
     historyDetailModal.classList.remove("hidden");
     historyDetailModal.setAttribute("aria-hidden", "false");
+    state.lastFocusedElement = document.activeElement;
+    setTimeout(() => historyDetailCloseBtn?.focus(), 0);
     return;
   }
   historyDetailEyebrow.textContent = record.mode === "exam" ? "Exam Submission" : "Training Record";
@@ -4721,10 +4758,16 @@ function openHistoryDetail(record) {
   `;
   historyDetailModal.classList.remove("hidden");
   historyDetailModal.setAttribute("aria-hidden", "false");
+  state.lastFocusedElement = document.activeElement;
+  setTimeout(() => historyDetailCloseBtn?.focus(), 0);
 }
 function closeHistoryDetail() {
   historyDetailModal.classList.add("hidden");
   historyDetailModal.setAttribute("aria-hidden", "true");
+  if (state.lastFocusedElement) {
+    state.lastFocusedElement.focus();
+    state.lastFocusedElement = null;
+  }
 }
 if (historyDetailCloseBtn) historyDetailCloseBtn.addEventListener("click", closeHistoryDetail);
 if (historyDetailModal) historyDetailModal.addEventListener("click", (e) => { if (e.target === historyDetailModal) closeHistoryDetail(); });
@@ -4755,17 +4798,6 @@ function afterRouteChange(route) {
   }
   if (route === "dashboard") renderStudentExamTasks();
 }
-// 在原 setRoute 后通过 MutationObserver 的方式不直接 hook,改用定时 + state.route 观察
-document.querySelectorAll(".nav-item").forEach((item) => {
-  item.addEventListener("click", () => {
-    setTimeout(() => afterRouteChange(state.route), 0);
-  });
-});
-document.querySelectorAll("[data-go]").forEach((item) => {
-  item.addEventListener("click", () => {
-    setTimeout(() => afterRouteChange(state.route), 0);
-  });
-});
 
 /* ---- 初始化 ---- */
 readClassMock();               // 首次写入mock

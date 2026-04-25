@@ -245,6 +245,7 @@
                 </aside>
                 <section class="chat-card">
                   <div id="chatLog" class="chat-window" aria-live="polite"></div>
+                  <div id="questionChips" class="question-chips"></div>
                   <div class="custom-question">
                     <input id="customQuestionInput" type="text" placeholder="也可以输入一句自定义追问，例如：最近有没有乏力、发热或体重变化？">
                     <button id="askCustomBtn" class="secondary-btn" type="button">发送追问</button>
@@ -276,6 +277,7 @@
                   <button id="analyzeBtn" class="primary-btn" type="button">重新生成复盘</button>
                 </div>
               </div>
+              <div id="modelNotice" class="model-notice hidden"></div>
               <p class="prompt">本页用于学生提交风险判断后的复盘，不在作答前展示，避免提前泄露系统分层和关键证据。</p>
               <div id="tagCloud" class="tag-cloud"></div>
               <div class="table-wrap">

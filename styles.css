@@ -956,6 +956,42 @@ body[data-mode="exam"] .question-bank-panel {
   gap: 10px;
 }
 
+.question-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.question-chip {
+  border: 1px solid rgba(31, 111, 88, 0.2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.question-chip:hover {
+  background: rgba(31, 111, 88, 0.1);
+  border-color: var(--green);
+}
+
+.model-notice {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(198, 144, 59, 0.1);
+  border: 1px solid rgba(198, 144, 59, 0.2);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .tcm-task-card {
   margin-top: 22px;
   border: 1px solid rgba(31, 111, 88, 0.16);
@@ -1812,7 +1848,12 @@ pre {
   }
 
   .app-nav::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+    height: 4px;
+  }
+  .app-nav::-webkit-scrollbar-thumb {
+    background: rgba(31, 111, 88, 0.15);
+    border-radius: 2px;
   }
 
   .nav-group {
@@ -1867,7 +1908,12 @@ pre {
   }
 
   .topbar-actions::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+    height: 4px;
+  }
+  .topbar-actions::-webkit-scrollbar-thumb {
+    background: rgba(31, 111, 88, 0.15);
+    border-radius: 2px;
   }
 
   h1 {
@@ -2831,7 +2877,15 @@ tr.clickable-row:hover {
   .topbar-actions::-webkit-scrollbar,
   .learning-path::-webkit-scrollbar,
   .question-bank::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+    height: 4px;
+  }
+  .app-nav::-webkit-scrollbar-thumb,
+  .topbar-actions::-webkit-scrollbar-thumb,
+  .learning-path::-webkit-scrollbar-thumb,
+  .question-bank::-webkit-scrollbar-thumb {
+    background: rgba(31, 111, 88, 0.15);
+    border-radius: 2px;
   }
 
   .nav-group {
@@ -3077,11 +3131,17 @@ tr.clickable-row:hover {
   }
 
   body[data-route="interview"] .page-view.active {
+    display: flex;
+    flex-direction: column;
     min-height: inherit;
     padding-bottom: 82px;
   }
 
   body[data-route="interview"] .interview-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     padding: 0;
     border: 0;
     background: transparent;
@@ -3131,9 +3191,11 @@ tr.clickable-row:hover {
   }
 
   body[data-route="interview"] .interview-layout {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0;
   }
 
   body[data-route="interview"] .patient-card {
@@ -3166,9 +3228,11 @@ tr.clickable-row:hover {
   }
 
   body[data-route="interview"] .chat-card {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -3177,9 +3241,8 @@ tr.clickable-row:hover {
   }
 
   body[data-route="interview"] .chat-window {
-    height: calc(100dvh - 254px);
-    min-height: 330px;
-    max-height: none;
+    flex: 1;
+    min-height: 150px;
     padding: 12px;
     border: 1px solid var(--line);
     border-radius: 18px;
@@ -3465,7 +3528,11 @@ tr.clickable-row:hover {
   }
 
   .cases-grid .side-panel::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+  }
+  .cases-grid .side-panel::-webkit-scrollbar-thumb {
+    background: rgba(31, 111, 88, 0.15);
+    border-radius: 2px;
   }
 
   .case-tab {
