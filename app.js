@@ -4622,6 +4622,39 @@ function renderClassStats(klass, avgScores) {
   const above80 = allScores.filter((s) => s >= 80).length;
   const above80Pct = allScores.length ? Math.round((above80 / allScores.length) * 100) : 0;
 
+  /* 生成趋势数据：按学生 lastTime 分布到过去4周 */
+  const now = new Date();
+  const weekLabels = [];
+  const weeklySessions = [0, 0, 0, 0];
+  const weeklyScores = [[], [], [], []];
+  for (let w = 3; w >= 0; w--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - w * 7);
+    weekLabels.push(`${d.getMonth() + 1}/${d.getDate()}`);
+  }
+  klass.students.forEach((st) => {
+    if (!st.lastTime) return;
+    const stDate = new Date(st.lastTime);
+    if (isNaN(stDate.getTime())) return;
+    const diffDays = Math.floor((now - stDate) / (1000 * 60 * 60 * 24));
+    const weekIdx = Math.max(0, Math.min(3, 3 - Math.floor(diffDays / 7)));
+    weeklySessions[weekIdx] += st.sessions || 0;
+    weeklyScores[weekIdx].push(st.avg || 0);
+  });
+  const weeklyAvgScores = weeklyScores.map((arr) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0);
+  const cumSessions = [];
+  let cum = 0;
+  weeklySessions.forEach((s) => { cum += s; cumSessions.push(cum); });
+
+  /* 薄弱点热力图数据 */
+  const weakCounts = {};
+  klass.students.forEach((st) => {
+    const w = st.weakness || "其他";
+    weakCounts[w] = (weakCounts[w] || 0) + 1;
+  });
+  const weakEntries = Object.entries(weakCounts).sort((a, b) => b[1] - a[1]);
+  const maxWeak = Math.max(...weakEntries.map((e) => e[1]), 1);
+
   container.innerHTML = `
     <div class="class-stat-visual">
       <h4>分数分布</h4>
@@ -4649,11 +4682,31 @@ function renderClassStats(klass, avgScores) {
         </div>
       </div>
     </div>
+    <div class="class-stat-visual trend-chart-box">
+      <h4>训练趋势（近4周）<span class="trend-legend"><i class="trend-dot sessions"></i>累计训练次数 <i class="trend-dot scores"></i>周均分</span></h4>
+      <canvas id="trendLineCanvas" width="360" height="180"></canvas>
+    </div>
+    <div class="class-stat-visual heatmap-box">
+      <h4>薄弱点分布</h4>
+      <div class="weakness-heatmap">
+        ${weakEntries.map(([name, count]) => {
+          const intensity = count / maxWeak;
+          let level = "low";
+          if (intensity >= 0.7) level = "high";
+          else if (intensity >= 0.4) level = "mid";
+          return `<div class="heatmap-cell ${level}" title="${name}: ${count}人">
+            <span class="heatmap-label">${name}</span>
+            <span class="heatmap-count">${count}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
   `;
 
-  const canvas = document.querySelector("#completionRingCanvas");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
+  /* 完成率环形图 */
+  const ringCanvas = document.querySelector("#completionRingCanvas");
+  if (ringCanvas) {
+    const ctx = ringCanvas.getContext("2d");
     const pct = klass.completeRate / 100;
     const cx = 40, cy = 40, r = 30, lineWidth = 6;
     ctx.clearRect(0, 0, 80, 80);
@@ -4668,6 +4721,98 @@ function renderClassStats(klass, avgScores) {
     ctx.lineWidth = lineWidth;
     ctx.lineCap = "round";
     ctx.stroke();
+  }
+
+  /* 趋势折线图 */
+  const trendCanvas = document.querySelector("#trendLineCanvas");
+  if (trendCanvas) {
+    const ctx = trendCanvas.getContext("2d");
+    const W = 360, H = 180;
+    const pad = { top: 20, right: 30, bottom: 30, left: 45 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, W, H);
+
+    /* Y轴刻度 */
+    const maxCum = Math.max(...cumSessions, 1);
+    const yMax = Math.ceil(maxCum / 10) * 10 || 10;
+    ctx.fillStyle = "#8b9a92";
+    ctx.font = "10px 'PingFang SC', sans-serif";
+    ctx.textAlign = "right";
+    for (let v = 0; v <= yMax; v += Math.ceil(yMax / 4)) {
+      const y = pad.top + plotH - (v / yMax) * plotH;
+      ctx.fillText(v, pad.left - 6, y + 3);
+      ctx.strokeStyle = "rgba(31,111,88,0.07)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+    }
+
+    /* X轴标签 */
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#8b9a92";
+    const xStep = plotW / (weekLabels.length - 1);
+    weekLabels.forEach((label, i) => {
+      const x = pad.left + i * xStep;
+      ctx.fillText(label, x, H - pad.bottom + 14);
+    });
+
+    /* 折线 - 累计训练次数 */
+    ctx.strokeStyle = "#1f6f58";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    cumSessions.forEach((v, i) => {
+      const x = pad.left + i * xStep;
+      const y = pad.top + plotH - (v / yMax) * plotH;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    /* 数据点 - 累计训练次数 */
+    cumSessions.forEach((v, i) => {
+      const x = pad.left + i * xStep;
+      const y = pad.top + plotH - (v / yMax) * plotH;
+      ctx.fillStyle = "#1f6f58";
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1f6f58";
+      ctx.font = "bold 10px 'PingFang SC', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(v, x, y - 10);
+    });
+
+    /* 折线 - 周均分（右Y轴） */
+    const scoreMax = 100;
+    const scoreMin = 50;
+    ctx.strokeStyle = "#e0916b";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    weeklyAvgScores.forEach((v, i) => {
+      const x = pad.left + i * xStep;
+      const y = pad.top + plotH - ((v - scoreMin) / (scoreMax - scoreMin)) * plotH;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* 数据点 - 周均分 */
+    weeklyAvgScores.forEach((v, i) => {
+      const x = pad.left + i * xStep;
+      const y = pad.top + plotH - ((v - scoreMin) / (scoreMax - scoreMin)) * plotH;
+      ctx.fillStyle = "#e0916b";
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#63706b";
+      ctx.font = "10px 'PingFang SC', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(v + "分", x, y - 9);
+    });
   }
 }
 

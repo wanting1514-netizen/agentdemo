@@ -4523,3 +4523,77 @@ body.dark-mode .dash-prog-step { color: var(--muted); }
 body.dark-mode .dash-prog-step.active { color: var(--green); }
 body.dark-mode .eyebrow { color: var(--muted); }
 
+/* 趋势折线图 */
+.trend-chart-box {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.trend-chart-box canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.trend-legend {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.trend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 2px 0 8px;
+  vertical-align: middle;
+}
+.trend-dot.sessions { background: #1f6f58; }
+.trend-dot.scores { background: #e0916b; }
+
+/* 薄弱点热力图 */
+.heatmap-box {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.weakness-heatmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.heatmap-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  min-width: 70px;
+  background: rgba(31,111,88,0.08);
+  border: 1px solid rgba(31,111,88,0.10);
+}
+.heatmap-cell.low { background: rgba(31,111,88,0.06); }
+.heatmap-cell.mid { background: rgba(31,111,88,0.14); }
+.heatmap-cell.high { background: rgba(31,111,88,0.22); border-color: rgba(31,111,88,0.28); }
+.heatmap-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.heatmap-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f6f58;
+  margin-top: 2px;
+}
+.heatmap-cell.high .heatmap-count { color: #c95a3a; }
+
+/* 深色模式适配 */
+body.dark-mode .trend-legend { color: var(--muted); }
+body.dark-mode .heatmap-cell { background: rgba(31,111,88,0.10); border-color: rgba(31,111,88,0.12); }
+body.dark-mode .heatmap-cell.low { background: rgba(31,111,88,0.06); }
+body.dark-mode .heatmap-cell.mid { background: rgba(31,111,88,0.16); }
+body.dark-mode .heatmap-cell.high { background: rgba(31,111,88,0.28); border-color: rgba(31,111,88,0.40); }
+body.dark-mode .heatmap-label { color: var(--ink); }
+body.dark-mode .heatmap-cell.high .heatmap-count { color: #f0a080; }
+
