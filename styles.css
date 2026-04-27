@@ -956,31 +956,6 @@ body[data-mode="exam"] .question-bank-panel {
   gap: 10px;
 }
 
-.question-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 0;
-}
-
-.question-chip {
-  border: 1px solid rgba(31, 111, 88, 0.2);
-  border-radius: 999px;
-  padding: 5px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--green-dark);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.question-chip:hover {
-  background: rgba(31, 111, 88, 0.1);
-  border-color: var(--green);
-}
-
 .model-notice {
   margin: 10px 0 0;
   padding: 8px 12px;

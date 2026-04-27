@@ -1431,22 +1431,6 @@ function renderInterview() {
   });
   updateDashboard(state.rubric.length ? `问诊覆盖${coverage.percent}%` : (state.interview.length ? "问诊进行中": "等待问诊"));
 
-  /* 渲染引导问题按钮 */
-  const chipsContainer = document.querySelector("#questionChips");
-  if (chipsContainer) {
-    chipsContainer.innerHTML = "";
-    if (!showPostSubmitHints && state.interview.length < 6) {
-      requiredQuestionKeys().map((key) => interviewQuestions.find((item) => item.key === key)).filter(Boolean).forEach((item) => {
-        if (!asked.has(item.key)) {
-          const btn = document.createElement("button");
-          btn.className = "question-chip";
-          btn.dataset.question = item.key;
-          btn.textContent = `追问：${item.label}`;
-          chipsContainer.appendChild(btn);
-        }
-      });
-    }
-  }
 }
 
 function appendMessage(role, text) {
@@ -3671,10 +3655,7 @@ document.querySelectorAll(".choice-btn").forEach((btn) => {
   });
 });
 
-document.querySelector("#questionChips")?.addEventListener("click", (e) => {
-  const chip = e.target.closest(".question-chip");
-  if (chip) askQuestion(chip.dataset.question);
-});
+// 引导问题按钮已移除
 
 askCustomBtn.addEventListener("click", () => {
   askQuestion("", customQuestionInput.value);
