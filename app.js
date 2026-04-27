@@ -951,6 +951,10 @@ function setRole(role, shouldRoute = false) {
 }
 
 function setRoute(route, options = {}) {
+  /* 考试倒计时清理：导航离开时确保定时器被关闭 */
+  if (state.mode === "exam" && examCountdownTimer) {
+    clearExamCountdownTimer();
+  }
   let nextRoute = route === "home" ? roleHomeRoute[state.role] : route;
   nextRoute = routeMeta[nextRoute] ? nextRoute : roleHomeRoute[state.role];
   if (!options.keepRole) {
@@ -1101,7 +1105,12 @@ function hasTonguePulseInfo(text) {
 }
 
 function analysisTextWithInterview() {
-  const interviewText = state.interview
+  /* 去重：同一追问只保留最后一次回答，避免重复计分 */
+  const seen = new Map();
+  state.interview.forEach((item) => {
+    if (item.key) seen.set(item.key, item);
+  });
+  const interviewText = [...seen.values()]
     .map((item) => `追问${item.label}：${item.answer}`)
     .join(" ");
   return `${caseInput.value} ${interviewText}`;
@@ -1261,9 +1270,27 @@ ${interviewLog ? `问诊记录：\n${interviewLog}\n\n` : ""}
   });
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
   const data = await response.json();
-  const parsed = JSON.parse(data.response || "{}");
+  const rawResponse = data.response || "";
+  /* 提取 JSON：优先尝试直接解析，失败则从 markdown 代码块中提取 */
+  let parsed;
+  try {
+    parsed = JSON.parse(rawResponse);
+  } catch (e) {
+    const jsonMatch = rawResponse.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (jsonMatch) {
+      try {
+        parsed = JSON.parse(jsonMatch[1]);
+      } catch (e2) {
+        console.info("Ollama JSON extract failed:", e2.message);
+        return null;
+      }
+    } else {
+      console.info("Ollama response missing JSON block:", rawResponse);
+      return null;
+    }
+  }
   if (!parsed.risk_key) {
-    console.info("Ollama response missing risk_key:", data.response);
+    console.info("Ollama response missing risk_key:", rawResponse);
     return null;
   }
   return {
@@ -2640,9 +2667,11 @@ async function renderAnalysis(options = {}) {
     return;
   }
 
-  parseStatus.textContent = "正在解析 ...";
-  parseStatus.className = "pill neutral";
+  parseStatus.textContent = "生成中";
+  parseStatus.className = "pill warn";
   parseStatus.style.opacity = "0.7";
+  tagCloud.innerHTML = '<span class="loading-spinner"></span><span class="loading-text">正在分析病例线索…</span>';
+  structuredTable.innerHTML = "";
 
   state.analysis = await analyzeCaseWithModel(text);
   parseStatus.style.opacity = "";
@@ -2668,6 +2697,7 @@ async function renderAnalysis(options = {}) {
   renderList(evidenceList, state.analysis.evidence);
   renderList(followupList, state.analysis.followups);
   renderTcmGuidelineReference();
+  renderGuidelineCitations(state.analysis);
   explainStatus.textContent = "已生成";
   explainStatus.className = "pill success";
   riskLevelText.textContent = state.analysis.risk.level;
@@ -2702,11 +2732,12 @@ async function submitJudgement() {
   }
   collectTcmAnswer();
   /* 显示loading状态 */
-  parseStatus.textContent = "正在解析 ...";
-  parseStatus.className = "pill neutral";
+  parseStatus.textContent = "生成中";
+  parseStatus.className = "pill warn";
   parseStatus.style.opacity = "0.7";
-  feedbackStatus.textContent = "解析中 ...";
-  feedbackStatus.className = "pill neutral";
+  tagCloud.innerHTML = '<span class="loading-spinner"></span><span class="loading-text">正在分析病例线索…</span>';
+  feedbackStatus.textContent = "解析中";
+  feedbackStatus.className = "pill warn";
   feedbackStatus.style.opacity = "0.7";
 
   await renderAnalysis({ force: true });
@@ -2974,6 +3005,37 @@ document.querySelector("#historyViewTimeline")?.addEventListener("click", () => 
   document.querySelector("#historyViewTimeline").classList.add("active");
   document.querySelector("#historyViewList")?.classList.remove("active");
   renderHistory();
+});
+
+document.querySelector("#exportHistoryBtn")?.addEventListener("click", () => {
+  const records = readStoredHistory();
+  if (!records.length) {
+    const btn = document.querySelector("#exportHistoryBtn");
+    if (btn) btn.textContent = "暂无记录";
+    setTimeout(() => { if (btn) btn.textContent = "导出记录"; }, 1500);
+    return;
+  }
+  let text = `问衡 · 学习记录导出 ${new Date().toLocaleString("zh-CN")}\n${"=".repeat(40)}\n\n`;
+  records.forEach((r, i) => {
+    text += `#${i + 1} ${r.time} | ${r.caseLabel}\n`;
+    text += `  模式：${r.mode === "exam" ? "考试" : "练习"}\n`;
+    text += `  学生判断：${r.selected} | 系统分层：${r.systemLevel}\n`;
+    const askedPct = r.asked ? `${r.asked.covered}/${r.asked.total}` : "—";
+    text += `  问诊覆盖：${askedPct} | 量规均分：${r.rubricAvg}\n`;
+    if (r.weakness) text += `  薄弱点：${r.weakness}\n`;
+    if (r.interview && r.interview.length) {
+      text += `  问诊记录：\n`;
+      r.interview.forEach((qa) => { text += `    问：${qa.question}\n    答：${qa.answer}\n`; });
+    }
+    text += "\n";
+  });
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `问衡学习记录_${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 });
 
 function renderTeacherRubric() {
@@ -3289,6 +3351,26 @@ function caseLabelToKey(label) {
   return null;
 }
 
+/* 指南/文献引用数据（按风险等级匹配） */
+const guidelineCitations = {
+  high: [
+    { type: "guideline", text: "《中国溃疡性结肠炎诊治指南（2023）》：便次≥4次/日伴黏液脓血便为中度活动期，建议尽快诱导缓解" },
+    { type: "guideline", text: "《炎症性肠病诊断与治疗的共识意见（2018）》：夜间腹泻、里急后重提示疾病活动度高" },
+    { type: "paper", text: "Truelove SC, Witts LJ. Cortisone in ulcerative colitis. BMJ 1955 — Truelove-Witts标准至今仍为活动度评估基石" },
+    { type: "paper", text: "Mayo评分系统中，便次≥4且伴出血时疾病活动度评分≥2分，归为中度活动" },
+  ],
+  low: [
+    { type: "guideline", text: "《中国溃疡性结肠炎诊治指南（2023）》：便次≤2次/日、无脓血便为缓解期或轻度活动" },
+    { type: "guideline", text: "《炎症性肠病诊断与治疗的共识意见（2018）》：无腹痛、规律服药者复发风险较低" },
+    { type: "paper", text: "SCCAI评分≤2分定义为临床缓解，预后良好率高" },
+  ],
+  boundary: [
+    { type: "guideline", text: "《中国溃疡性结肠炎诊治指南（2023）》：症状不典型或信息不充分时建议进一步随访评估" },
+    { type: "guideline", text: "《炎症性肠病诊断与治疗的共识意见（2018）》：部分缓解期患者需结合内镜和实验室指标综合判断" },
+    { type: "paper", text: "PMS评分用于黏膜愈合评估，部分症状消失不等同于黏膜愈合" },
+  ],
+};
+
 /* 渲染中医辨证思路参考（分析页面） */
 function renderTcmGuidelineReference() {
   const container = document.querySelector("#tcmGuidelineContent");
@@ -3381,6 +3463,25 @@ function renderTcmGuidelineReference() {
     </div>
   `;
   container.innerHTML = html;
+}
+
+/* 渲染指南/文献引用（分析页学术可信度增强） */
+function renderGuidelineCitations(analysis) {
+  const container = document.querySelector("#guidelineCitations");
+  if (!container) return;
+  const riskKey = analysis.risk.key;
+  const citations = guidelineCitations[riskKey] || guidelineCitations.low;
+  container.innerHTML = `
+    <h4>指南与文献依据</h4>
+    <div class="citation-list">
+      ${citations.map((c) => `
+        <div class="citation-item">
+          <span class="citation-tag ${c.type}">${c.type === "guideline" ? "指南" : "文献"}</span>
+          <span>${escapeHtml(c.text)}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 /* 渲染中医辨证参考知识库（教师端） */
@@ -3719,6 +3820,8 @@ loginForm.addEventListener("submit", (event) => {
       ? hashRoute
       : roleHomeRoute[account.role];
     setRoute(startRoute);
+    hideSkeletonScreen();
+    showOnboardingGuide();
     return;
   }
   loginError.textContent = "账号或密码不正确。学生工作台账号：student_demo；教学复盘账号：teacher_demo；密码均为 ChangYu2026!";
@@ -4501,6 +4604,73 @@ function renderCompetitionEvidence() {
 
 /* ---- 班级管理 ---- */
 let activeClassId = null;
+/* 全班统计可视化 */
+function renderClassStats(klass, avgScores) {
+  const container = document.querySelector("#classStatsBar");
+  if (!container) return;
+  const bins = [
+    { label: "≥90", min: 90, max: 100, cls: "high" },
+    { label: "80-89", min: 80, max: 89, cls: "high" },
+    { label: "70-79", min: 70, max: 79, cls: "mid" },
+    { label: "60-69", min: 60, max: 69, cls: "mid" },
+    { label: "<60", min: 0, max: 59, cls: "low" },
+  ];
+  const counts = bins.map((b) => avgScores.filter((s) => s >= b.min && s <= b.max).length);
+  const maxCount = Math.max(...counts, 1);
+  const allScores = [...avgScores];
+  const avgScore = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+  const above80 = allScores.filter((s) => s >= 80).length;
+  const above80Pct = allScores.length ? Math.round((above80 / allScores.length) * 100) : 0;
+
+  container.innerHTML = `
+    <div class="class-stat-visual">
+      <h4>分数分布</h4>
+      <div class="distribution-bars">
+        ${bins.map((b, i) => `
+          <div>
+            <div style="position:relative;height:60px;display:flex;align-items:flex-end;">
+              <div class="dist-bar ${b.cls}" style="height:${Math.max(counts[i] / maxCount * 100, 8)}%">
+                ${counts[i] > 0 ? `<span class="dist-bar-value">${counts[i]}</span>` : ""}
+              </div>
+            </div>
+            <div class="dist-bar-label">${b.label}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    <div class="class-stat-visual">
+      <h4>班级概况</h4>
+      <div class="completion-ring">
+        <canvas id="completionRingCanvas" width="80" height="80"></canvas>
+        <div class="completion-ring-text">
+          <strong>${avgScore}分</strong>
+          均分 · ${above80Pct}% ≥80分<br>
+          ${klass.completeRate}% 完成率
+        </div>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.querySelector("#completionRingCanvas");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    const pct = klass.completeRate / 100;
+    const cx = 40, cy = 40, r = 30, lineWidth = 6;
+    ctx.clearRect(0, 0, 80, 80);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(31,111,88,0.1)";
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+    ctx.strokeStyle = "#1f6f58";
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.stroke();
+  }
+}
+
 function renderClassPage() {
   const classes = readClassMock();
   if (!activeClassId) activeClassId = classes[0].id;
@@ -4531,6 +4701,10 @@ function renderClassPage() {
   const weak = klass.students.reduce((acc, st) => { acc[st.weakness] = (acc[st.weakness] || 0) + 1; return acc; }, {});
   const topWeak = Object.entries(weak).sort((a, b) => b[1] - a[1])[0];
   if (sEl("#classFocus")) sEl("#classFocus").textContent = topWeak ? topWeak[0] : "—";
+
+  /* 全班统计可视化：分数分布 + 完成率 */
+  renderClassStats(klass, avgScores);
+
   const tbody = document.querySelector("#classStudentTable");
   if (tbody) {
     tbody.innerHTML = "";
@@ -4927,3 +5101,145 @@ renderClinicalBasis();
 renderCompetitionEvidence();
 renderErrorDiagnosis([]);
 renderTcmKnowledgeBase();
+
+/* ---- 骨架屏隐藏 ---- */
+function hideSkeletonScreen() {
+  const skeleton = document.querySelector("#skeletonScreen");
+  if (!skeleton) return;
+  skeleton.classList.add("fade-out");
+  setTimeout(() => skeleton.remove(), 350);
+}
+
+/* ---- 操作引导动画 ---- */
+const ONBOARDING_KEY = "yanchang-onboarding-seen-v1";
+const onboardingSteps = [
+  {
+    title: "欢迎使用问衡",
+    desc: "这是一个中西医结合的病例推理教学系统。接下来我会带你走一遍完整的训练流程。",
+  },
+  {
+    target: "#page-dashboard",
+    title: "第一步：首页",
+    desc: "从这里查看当前状态、考试安排和训练进度。点击「开始训练」进入病例选择。",
+    highlight: true,
+  },
+  {
+    target: "#page-cases",
+    title: "第二步：选择病例",
+    desc: "选择要训练的病例，系统会加载病例信息和患者资料。",
+    highlight: true,
+  },
+  {
+    target: "#page-interview",
+    title: "第三步：虚拟问诊",
+    desc: "通过追问按钮或自由输入，向虚拟患者提问。系统会跟踪你覆盖了多少条关键线索。",
+    highlight: true,
+  },
+  {
+    target: "#page-judgement",
+    title: "第四步：提交判断",
+    desc: "根据问诊信息，判断患者的复发风险等级：低、中或高。",
+    highlight: true,
+  },
+  {
+    target: "#page-analysis",
+    title: "第五步：系统解析",
+    desc: "系统会基于本地大模型（Ollama）或规则引擎生成风险分析，并提供中医辨证思路参考和文献依据。",
+    highlight: true,
+  },
+  {
+    target: "#page-feedback",
+    title: "第六步：反馈报告",
+    desc: "系统会对比你的判断和系统分层，生成个性化的形成性评价量规。",
+    highlight: true,
+  },
+];
+
+function showOnboardingGuide() {
+  if (sessionStorage.getItem(ONBOARDING_KEY)) return;
+  sessionStorage.setItem(ONBOARDING_KEY, "true");
+
+  let currentStep = 0;
+  let overlay = null;
+
+  function showStep(idx) {
+    const step = onboardingSteps[idx];
+    /* 先隐藏上一个 */
+    if (overlay) {
+      overlay.remove();
+      overlay = null;
+      /* 恢复高亮元素的样式 */
+      if (step.highlight) {
+        const prevTarget = onboardingSteps[idx - 1]?.target;
+        if (prevTarget) {
+          const el = document.querySelector(prevTarget);
+          if (el) { el.style.position = ""; el.style.zIndex = ""; el.style.boxShadow = ""; }
+        }
+      }
+    }
+    if (idx >= onboardingSteps.length) return;
+
+    /* 高亮目标 */
+    if (step.highlight && step.target) {
+      const el = document.querySelector(step.target);
+      if (el) {
+        el.style.position = "relative";
+        el.style.zIndex = "9999";
+        el.style.boxShadow = "0 0 0 3px var(--green), 0 8px 32px rgba(31,111,88,0.2)";
+      }
+    }
+
+    /* 计算 dots */
+    const dotsHtml = onboardingSteps.map((_, i) => {
+      const cls = i < idx ? "done" : (i === idx ? "active" : "");
+      return `<span class="step-dot ${cls}"></span>`;
+    }).join("");
+
+    overlay = document.createElement("div");
+    overlay.className = "onboarding-overlay";
+    overlay.innerHTML = `
+      <div class="onboarding-tooltip">
+        <h4>${step.title}</h4>
+        <p>${step.desc}</p>
+        <div class="step-dots">${dotsHtml}</div>
+        <div>
+          <button class="onboarding-next-btn" type="button">${idx < onboardingSteps.length - 1 ? "下一步" : "开始训练"}</button>
+          ${idx > 0 ? '<button class="onboarding-skip-btn" type="button">跳过</button>' : ""}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const nextBtn = overlay.querySelector(".onboarding-next-btn");
+    const skipBtn = overlay.querySelector(".onboarding-skip-btn");
+
+    nextBtn.addEventListener("click", () => {
+      if (step.highlight && step.target) {
+        const el = document.querySelector(step.target);
+        if (el) { el.style.position = ""; el.style.zIndex = ""; el.style.boxShadow = ""; }
+      }
+      if (idx + 1 < onboardingSteps.length) {
+        /* 导航到下一个目标 */
+        setRoute(onboardingSteps[idx + 1].target.replace("#page-", ""));
+        setTimeout(() => showStep(idx + 1), 400);
+      } else {
+        /* 完成 */
+        if (overlay) overlay.remove();
+      }
+    });
+
+    if (skipBtn) {
+      skipBtn.addEventListener("click", () => {
+        if (step.highlight && step.target) {
+          const el = document.querySelector(step.target);
+          if (el) { el.style.position = ""; el.style.zIndex = ""; el.style.boxShadow = ""; }
+        }
+        if (overlay) overlay.remove();
+      });
+    }
+  }
+
+  /* 从第一步开始（延迟确保页面已渲染） */
+  setTimeout(() => showStep(0), 800);
+}

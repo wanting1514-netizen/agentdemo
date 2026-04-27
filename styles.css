@@ -1594,6 +1594,284 @@ body[data-mode="exam"] .question-bank-panel {
   font-style: italic;
 }
 
+/* 加载状态 */
+.loading-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(31, 111, 88, 0.2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loading-text {
+  vertical-align: middle;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 指南/文献引用 */
+#guidelineCitations {
+  margin-top: 20px;
+}
+#guidelineCitations h4 {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--green-dark);
+  margin-bottom: 8px;
+}
+.citation-list {
+  display: grid;
+  gap: 6px;
+}
+.citation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(31, 111, 88, 0.08);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.citation-tag {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+.citation-tag.guideline {
+  background: var(--green);
+}
+.citation-tag.paper {
+  background: var(--gold);
+}
+
+/* 全班统计可视化 */
+.class-stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.class-stat-visual {
+  flex: 1;
+  min-width: 180px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(31, 111, 88, 0.1);
+}
+.class-stat-visual h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.distribution-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 60px;
+}
+.dist-bar {
+  flex: 1;
+  background: rgba(31, 111, 88, 0.12);
+  border-radius: 4px 4px 0 0;
+  transition: background 0.15s;
+  position: relative;
+  min-width: 20px;
+}
+.dist-bar.high {
+  background: var(--green);
+}
+.dist-bar.mid {
+  background: var(--gold);
+}
+.dist-bar.low {
+  background: #c4433b;
+}
+.dist-bar-label {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.dist-bar-value {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* 问诊历史导出按钮 */
+.export-btn {
+  position: relative;
+}
+
+/* 骨架屏 */
+.skeleton-shell {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s;
+}
+.skeleton-shell.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.skeleton-card {
+  width: 280px;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(31, 111, 88, 0.08);
+}
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(31, 111, 88, 0.06) 25%, rgba(31, 111, 88, 0.12) 50%, rgba(31, 111, 88, 0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: 12px;
+}
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w80 { width: 80%; }
+.skeleton-line.w100 { width: 100%; }
+.skeleton-line.thick { height: 20px; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 操作引导动画 */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.onboarding-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.onboarding-tooltip {
+  position: relative;
+  max-width: 360px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid var(--green);
+  box-shadow: 0 8px 32px rgba(31, 111, 88, 0.15);
+  text-align: center;
+  animation: popIn 0.3s ease-out;
+}
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.onboarding-tooltip h4 {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--green-dark);
+  margin: 0 0 8px;
+}
+.onboarding-tooltip p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.onboarding-tooltip .step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.onboarding-tooltip .step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(31, 111, 88, 0.2);
+  transition: background 0.2s;
+}
+.onboarding-tooltip .step-dot.active {
+  background: var(--green);
+  transform: scale(1.3);
+}
+.onboarding-tooltip .step-dot.done {
+  background: var(--gold);
+}
+.onboarding-next-btn {
+  padding: 6px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: var(--green);
+  color: #fff;
+  transition: background 0.15s;
+}
+.onboarding-next-btn:hover {
+  background: #175a46;
+}
+.onboarding-skip-btn {
+  margin-left: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(31, 111, 88, 0.2);
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.onboarding-skip-btn:hover {
+  background: rgba(31, 111, 88, 0.06);
+}
+
+/* 班级完成率进度环 */
+.completion-ring {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.completion-ring canvas {
+  flex-shrink: 0;
+}
+.completion-ring-text {
+  font-size: 12px;
+  color: var(--muted);
+}
+.completion-ring-text strong {
+  display: block;
+  font-size: 22px;
+  color: var(--green-dark);
+}
+
 .history-item {
   display: flex;
   justify-content: space-between;

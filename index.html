@@ -13,6 +13,17 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
+    <!-- 首屏骨架屏 -->
+    <div id="skeletonScreen" class="skeleton-shell">
+      <div class="skeleton-card">
+        <div class="skeleton-line thick w60"></div>
+        <div class="skeleton-line w80"></div>
+        <div class="skeleton-line w100"></div>
+        <div class="skeleton-line w100"></div>
+        <div class="skeleton-line w60"></div>
+      </div>
+    </div>
+
     <main class="shell">
       <section id="loginView" class="login-view">
         <div class="login-card">
@@ -301,6 +312,7 @@
                   <p class="muted-copy">完成中医辨证和风险判断后，系统会基于2023年专家共识和名医经验生成辨证思路参考。</p>
                 </div>
               </div>
+              <div id="guidelineCitations"></div>
             </article>
             <div class="flow-footer">
               <div class="flow-footer-left">
@@ -645,6 +657,7 @@
                     <strong>已发布：</strong><span id="classPublishText">考试任务已加入当前班级。</span>
                   </div>
                   <p class="muted-copy compact-note">点击学生行可进入"教学复盘"查看该学生的详细记录。</p>
+                  <div class="class-stats-bar" id="classStatsBar"></div>
                   <div class="table-wrap">
                     <table class="structured-table compact-table">
                       <thead>
@@ -809,6 +822,7 @@
               </div>
               <div id="historyTimeline" class="history-timeline"></div>
               <div class="next-row">
+                <button class="secondary-btn" type="button" id="exportHistoryBtn">导出记录</button>
                 <button class="secondary-btn" type="button" data-go="cases">开始新一次训练</button>
                 <button class="primary-btn" type="button" data-go="home">返回工作台</button>
               </div>
