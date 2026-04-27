@@ -955,6 +955,12 @@ function setRoute(route, options = {}) {
   if (state.mode === "exam" && examCountdownTimer) {
     clearExamCountdownTimer();
   }
+  /* 一键演示中断：用户手动导航时停止自动演示 */
+  if (demoRunning && !options.keepRole) {
+    demoRunning = false;
+    const btn = document.querySelector("#autoDemoBtn");
+    if (btn) { btn.textContent = "一键演示"; btn.disabled = false; }
+  }
   let nextRoute = route === "home" ? roleHomeRoute[state.role] : route;
   nextRoute = routeMeta[nextRoute] ? nextRoute : roleHomeRoute[state.role];
   if (!options.keepRole) {
