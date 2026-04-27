@@ -95,6 +95,7 @@
             </div>
             <div class="topbar-actions">
               <span id="sessionStatus" class="pill success">演示账号在线</span>
+              <button id="darkModeToggle" class="ghost-btn" type="button" title="切换深色模式">🌓</button>
               <button id="aboutBtn" class="ghost-btn" type="button" title="查看系统定位与安全边界">关于本系统</button>
               <button id="logoutBtn" class="ghost-btn">退出</button>
             </div>
@@ -485,6 +486,7 @@
                     <span id="rubricStatus" class="pill neutral">等待生成</span>
                   </div>
                   <p class="rubric-source-note muted-copy compact-note">总分满分 100 分，由7个维度按权重相加。量规参照 Mini-CEX 临床能力评价、医师资格实践技能考试中的病史采集/四诊信息采集/辨证论治要求，并改编为 UC 中西医结合病例推理训练。</p>
+                  <canvas id="radarChartCanvas" class="radar-chart-canvas" width="300" height="300"></canvas>
                   <div id="rubricScoreGrid" class="rubric-score-grid"></div>
                 </div>
                 <div class="substep-actions">

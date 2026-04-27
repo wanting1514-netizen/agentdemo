@@ -458,6 +458,7 @@ const state = {
   modelApiSource: "local",
   interviewReminder: "",
   lastFocusedElement: null,
+  tabBlurCount: 0, /* 考试切屏次数 */
 };
 
 let examCountdownTimer = null;
@@ -475,7 +476,6 @@ const caseInput = document.querySelector("#caseInput");
 const caseLabel = document.querySelector("#caseLabel");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const resetBtn = document.querySelector("#resetBtn");
-const emptyCaseBtn = document.querySelector("#emptyCaseBtn");
 const parseStatus = document.querySelector("#parseStatus");
 const tagCloud = document.querySelector("#tagCloud");
 const structuredTable = document.querySelector("#structuredTable");
@@ -2462,6 +2462,7 @@ function renderRubric() {
 
   rubricStatus.textContent = "已生成";
   rubricStatus.className = "pill success";
+  drawRadarChart(state.rubric);
   const totalScore = averageRubricScore();
   const totalCard = document.createElement("div");
   totalCard.className = "rubric-score-card total";
@@ -5243,3 +5244,137 @@ function showOnboardingGuide() {
   /* 从第一步开始（延迟确保页面已渲染） */
   setTimeout(() => showStep(0), 800);
 }
+
+/* ---- 雷达图绘制 ---- */
+function drawRadarChart(scores) {
+  const canvas = document.querySelector("#radarChartCanvas");
+  if (!canvas || !scores.length) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const R = Math.min(W, H) / 2 - 40;
+  const labels = scores.map((s) => normalizeRubricLabel(s.label));
+  const values = scores.map((s) => s.score / s.weight);
+  const n = labels.length;
+
+  ctx.clearRect(0, 0, W, H);
+
+  /* 绘制同心网格 */
+  for (let level = 1; level <= 5; level++) {
+    const r = (R / 5) * level;
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const angle = (Math.PI * 2 / n) * (i % n) - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = "rgba(31,111,88,0.1)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  /* 绘制轴线 */
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+    ctx.strokeStyle = "rgba(31,111,88,0.12)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  /* 绘制数据区域 */
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const idx = i % n;
+    const angle = (Math.PI * 2 / n) * idx - Math.PI / 2;
+    const r = R * (values[idx] || 0);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(31,111,88,0.18)";
+  ctx.fill();
+  ctx.strokeStyle = "#1f6f58";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  /* 数据点 */
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+    const r = R * (values[i] || 0);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#1f6f58";
+    ctx.fill();
+  }
+
+  /* 标签 */
+  ctx.font = "11px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#63706b";
+  ctx.textAlign = "center";
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+    const labelR = R + 22;
+    let x = cx + labelR * Math.cos(angle);
+    let y = cy + labelR * Math.sin(angle);
+    /* 底部标签下移，避免贴边 */
+    if (y > cy + R) y += 8;
+    if (y < cy - R) y -= 8;
+    ctx.fillText(labels[i], x, y + 4);
+  }
+}
+
+/* ---- 考试模式防切屏检测 ---- */
+document.addEventListener("visibilitychange", () => {
+  if (state.mode === "exam" && document.hidden) {
+    state.tabBlurCount++;
+    const examBadge = document.querySelector("#examCountdown");
+    if (examBadge) {
+      examBadge.textContent = `⚠️ 切屏 ${state.tabBlurCount} 次`;
+      examBadge.className = "pill warn";
+    }
+  }
+});
+document.addEventListener("copy", (e) => {
+  if (state.mode === "exam") {
+    state.tabBlurCount++;
+    e.preventDefault();
+  }
+});
+
+/* ---- 深色模式切换 ---- */
+const DARK_MODE_KEY = "yanchang-dark-mode";
+const darkModeToggle = document.querySelector("#darkModeToggle");
+if (darkModeToggle) {
+  const isDark = sessionStorage.getItem(DARK_MODE_KEY) === "true";
+  if (isDark) document.body.classList.add("dark-mode");
+  darkModeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    sessionStorage.setItem(DARK_MODE_KEY, document.body.classList.contains("dark-mode") ? "true" : "false");
+  });
+}
+
+/* ---- 作答页键盘快捷键 ---- */
+document.addEventListener("keydown", (e) => {
+  if (state.route !== "judgement" || !state.selectedAnswer) return;
+  /* 不允许输入时触发（如在 textarea/input 中） */
+  const active = document.activeElement;
+  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+  if (e.key === "1") {
+    const lowOpt = document.querySelector('input[name="answer"][value="low"]');
+    if (lowOpt) { lowOpt.checked = true; lowOpt.dispatchEvent(new Event("change")); }
+  } else if (e.key === "2") {
+    const midOpt = document.querySelector('input[name="answer"][value="medium"]');
+    if (midOpt) { midOpt.checked = true; midOpt.dispatchEvent(new Event("change")); }
+  } else if (e.key === "3") {
+    const highOpt = document.querySelector('input[name="answer"][value="high"]');
+    if (highOpt) { highOpt.checked = true; highOpt.dispatchEvent(new Event("change")); }
+  }
+});
