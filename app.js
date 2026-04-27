@@ -909,15 +909,19 @@ function applyRoleNavigation() {
 }
 
 function isPostAnswerUnlocked() {
+  if (state.mode === "exam") {
+    const activeExam = getActiveExam();
+    return isExamFeedbackOpen(activeExam);
+  }
   return state.rubric.length > 0;
 }
 
 function shouldBlockPostAnswerRoute(route) {
-  return state.role === "student" && state.mode !== "exam" && postAnswerRoutes.has(route) && !isPostAnswerUnlocked();
+  return state.role === "student" && postAnswerRoutes.has(route) && !isPostAnswerUnlocked();
 }
 
 function syncPostAnswerAccess() {
-  const locked = state.role === "student" && state.mode !== "exam" && !isPostAnswerUnlocked();
+  const locked = state.role === "student" && !isPostAnswerUnlocked();
   document.querySelectorAll("[data-route], [data-go]").forEach((item) => {
     const targetRoute = item.dataset.route || item.dataset.go;
     if (!postAnswerRoutes.has(targetRoute)) return;
@@ -3691,9 +3695,8 @@ builderForm.addEventListener("submit", (event) => {
 });
 
 examForm.addEventListener("submit", (event) => {
-  // 这里只做兜底:渲染考试预览,真正的发布在 publishExamTask() 里(见文件末尾追加代码,捕获阶段优先执行)
   event.preventDefault();
-  renderExamPreview();
+  publishExamTask();
 });
 
 [examTitle, examClass, examSpecialty, examSource, examCaseKey, examStartAt, examEndAt, examDuration, examFeedbackMode].forEach((field) => {
@@ -3718,6 +3721,8 @@ if (publishDraftExamBtn) {
       const riskMap = { 低风险: "low", 中风险: "boundary", 高风险: "high" };
       examCaseKey.value = riskMap[builderRisk.value] || "high";
     }
+    if (examDuration && !examDuration.value) examDuration.value = "30分钟";
+    if (examFeedbackMode && !examFeedbackMode.value) examFeedbackMode.value = "教师统一发布后开放";
     renderExamPreview();
     examStatus.textContent = "已载入建课草稿";
     examStatus.className = "pill warn";
@@ -4758,14 +4763,6 @@ if (reviewSelect) {
   reviewSelect.addEventListener("change", (e) => renderReviewForStudent(e.target.value));
 }
 
-/* 替换原有的examForm提交逻辑 —— 这里补一个新的监听优先处理,原逻辑保留但不重复触发 */
-if (examForm) {
-  examForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    publishExamTask();
-  }, true); // 用捕获阶段优先触发
-}
 
 /* ---- 路由切换时同步渲染教师页/学生考试列表 ---- */
 function afterRouteChange(route) {
