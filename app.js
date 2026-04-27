@@ -3868,13 +3868,6 @@ document.querySelectorAll(".case-tab[data-case]").forEach((tab) => {
   });
 });
 
-if (emptyCaseBtn) {
-  emptyCaseBtn.addEventListener("click", () => {
-    resetCustomCase();
-    setRoute("builder");
-  });
-}
-
 analyzeBtn.addEventListener("click", () => renderAnalysis());
 resetBtn.addEventListener("click", () => {
   if (!confirm("恢复当前示例将清空所有问诊和分析记录，确定继续？")) return;
