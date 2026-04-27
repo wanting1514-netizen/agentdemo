@@ -4433,3 +4433,93 @@ body.dark-mode .onboarding-tooltip {
   background: #2a2e2c;
   border-color: #1f6f58;
 }
+/* 深色模式下强制浅色文字 */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode strong,
+body.dark-mode b,
+body.dark-mode label,
+body.dark-mode th {
+  color: var(--ink);
+}
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode small,
+body.dark-mode li,
+body.dark-mode td {
+  color: var(--muted);
+}
+body.dark-mode .pill.success { color: #c9ecd7; background: rgba(31,111,88,0.35); }
+body.dark-mode .pill.warn { color: #f0c8a4; background: rgba(198,144,59,0.3); }
+body.dark-mode .pill.neutral { color: #bcc5bf; background: rgba(99,112,107,0.2); }
+body.dark-mode .muted-copy { color: var(--muted); }
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  color: var(--ink);
+  background: rgba(30,38,34,0.6);
+  border-color: var(--line);
+}
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: var(--muted);
+}
+body.dark-mode .nav-item { color: var(--muted); }
+body.dark-mode .nav-item.active { color: var(--green); }
+body.dark-mode .nav-item:hover { color: var(--ink); }
+body.dark-mode .brand-block strong { color: var(--green); }
+body.dark-mode .brand-block small { color: var(--muted); }
+body.dark-mode .message.patient { background: rgba(50,60,54,0.7); color: var(--ink); }
+body.dark-mode .message.student { background: rgba(31,111,88,0.2); color: var(--ink); }
+body.dark-mode #chatLog { background: transparent; }
+body.dark-mode .score-track { background: rgba(99,112,107,0.15); }
+body.dark-mode .meter-track { background: rgba(99,112,107,0.15); }
+body.dark-mode .mode-tag.exam { background: rgba(200,80,60,0.25); color: #f0b8a8; }
+body.dark-mode .mode-tag.practice { background: rgba(31,111,88,0.25); color: #b0d8c4; }
+body.dark-mode .account-tag { color: var(--ink); }
+body.dark-mode .login-card { background: var(--surface); }
+body.dark-mode .login-card h1 { color: var(--green); }
+body.dark-mode .demo-note { background: var(--surface-strong); }
+body.dark-mode .demo-note code { background: rgba(50,60,54,0.6); }
+/* 硬编码颜色在深色模式下的修复 */
+body.dark-mode .flow-indicator,
+body.dark-mode .substep-title,
+body.dark-mode .compact-meta,
+body.dark-mode .exam-banner strong,
+body.dark-mode .rubric-score-label,
+body.dark-mode pre,
+body.dark-mode .note-small,
+body.dark-mode .compact-note,
+body.dark-mode .history-item-head span {
+  color: var(--muted);
+}
+body.dark-mode .rubric-score-card strong { color: var(--ink); }
+body.dark-mode .risk-meter strong,
+body.dark-mode .risk-meter small { color: var(--ink); }
+body.dark-mode .history-item strong { color: var(--green); }
+body.dark-mode .case-card strong { color: var(--ink); }
+body.dark-mode .case-tab { color: var(--muted); }
+body.dark-mode .case-tab.active { color: var(--green); }
+body.dark-mode .sidebar-note span { color: var(--clay); }
+body.dark-mode .step-badge { color: var(--green); }
+body.dark-mode .nav-item.flow-nav.active .step-badge { color: var(--ink); background: rgba(31,111,88,0.35); }
+body.dark-mode .exam-banner strong,
+body.dark-mode .exam-lock-card strong { color: var(--clay); }
+body.dark-mode .asked-list .missing { color: var(--clay); }
+body.dark-mode .rubric-score-weight { color: var(--muted); }
+body.dark-mode .dash-progress { background: var(--surface-strong); }
+body.dark-mode .template-card { background: var(--surface-strong); }
+body.dark-mode .case-tab { color: var(--muted); background: var(--surface-strong); }
+body.dark-mode .case-tab.active { color: #fff; background: var(--green); }
+body.dark-mode .question-chip { background: var(--surface-strong); color: var(--ink); border-color: var(--line); }
+body.dark-mode .question-chip:hover { background: rgba(31,111,88,0.15); }
+body.dark-mode .class-card { background: var(--surface-strong); color: var(--ink); }
+body.dark-mode .class-card.active { border-color: var(--green); }
+body.dark-mode .dash-stat-card span { color: var(--muted); }
+body.dark-mode .dash-stat-card strong { color: var(--ink); }
+body.dark-mode .dash-prog-step { color: var(--muted); }
+body.dark-mode .dash-prog-step.active { color: var(--green); }
+body.dark-mode .eyebrow { color: var(--muted); }
+
