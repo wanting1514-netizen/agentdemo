@@ -1481,9 +1481,117 @@ body[data-mode="exam"] .question-bank-panel {
   margin-bottom: 16px;
 }
 
+.tab-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.tab-row .tab-btn {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(31, 111, 88, 0.2);
+  color: var(--muted);
+  background: transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tab-row .tab-btn.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.tab-row .tab-btn:hover:not(.active) {
+  background: rgba(31, 111, 88, 0.08);
+}
+
 .history-timeline {
   display: grid;
   gap: 12px;
+}
+
+.timeline-node {
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+.timeline-node::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: -12px;
+  width: 2px;
+  background: rgba(31, 111, 88, 0.12);
+}
+.timeline-node:last-child::before {
+  display: none;
+}
+.timeline-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  border: 3px solid var(--green);
+  background: #fff;
+}
+.timeline-dot.qualified {
+  border-color: var(--green);
+  background: var(--green);
+}
+.timeline-dot.partial {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.timeline-dot.warn {
+  border-color: #c4433b;
+  background: #c4433b;
+}
+.timeline-content {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 111, 88, 0.1);
+  background: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.timeline-content:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+.timeline-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.timeline-time {
+  font-size: 11px;
+  color: var(--muted);
+}
+.timeline-body strong {
+  font-size: 14px;
+  color: var(--green-dark);
+}
+.timeline-metrics {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 2px;
+  flex-wrap: wrap;
+}
+.timeline-metrics strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+.timeline-weakness {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
 }
 
 .history-item {

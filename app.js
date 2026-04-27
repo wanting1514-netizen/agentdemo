@@ -404,6 +404,8 @@ const configText = (value) => (typeof value === "string" ? value.trim() : "");
 const REMOTE_UC_MODEL_API_URL = configText(runtimeConfig.modelApiUrl);
 const REMOTE_PATIENT_API_URL = configText(runtimeConfig.patientApiUrl);
 const ENABLE_PATIENT_API = Boolean(REMOTE_PATIENT_API_URL);
+const OLLAMA_MODEL = configText(runtimeConfig.ollamaModel);
+const OLLAMA_BASE_URL = configText(runtimeConfig.ollamaBaseUrl) || "http://localhost:11434";
 
 function readStoredHistory() {
   try {
@@ -1222,6 +1224,55 @@ function mergeModelAnalysis(localAnalysis, modelResult) {
   };
 }
 
+async function callOllama(text) {
+  const ollamaUrl = `${OLLAMA_BASE_URL}/api/generate`;
+  const interviewLog = state.interview.map((item) =>
+    `学生问：${item.question}\n患者答：${item.answer}`
+  ).join("\n\n");
+  const prompt = `你是一个中西医结合病例分析助手，专注于溃疡性结肠炎（UC）复发风险分层。
+
+请分析以下病例文本和问诊记录，输出UC复发风险分层。
+
+病例文本：
+${text}
+
+${interviewLog ? `问诊记录：\n${interviewLog}\n\n` : ""}
+请严格按以下JSON格式输出，不要包含其他内容：
+{
+  "risk_key": "high 或 low 或 boundary",
+  "probability": 风险概率 0-1 之间的小数,
+  "reasoning": "简要分析理由（50字以内）"
+}
+
+判断依据：
+- high（高风险）：便次≥4次/日，有黏液脓血便，腹痛/里急后重，夜间症状，近期停药/依从性差，舌红苔腻
+- low（低风险）：便次≤2次/日，无黏液脓血，无腹痛，规律服药，舌淡红苔薄白
+- boundary（中/边界风险）：介于两者之间，或信息不充分`;
+
+  const response = await fetch(ollamaUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      prompt,
+      stream: false,
+      format: "json",
+    }),
+  });
+  if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
+  const data = await response.json();
+  const parsed = JSON.parse(data.response || "{}");
+  if (!parsed.risk_key) {
+    console.info("Ollama response missing risk_key:", data.response);
+    return null;
+  }
+  return {
+    risk_key: parsed.risk_key,
+    probability: parsed.probability ?? 0.5,
+    source: `ollama-${OLLAMA_MODEL}`,
+  };
+}
+
 async function analyzeCaseWithModel(text) {
   const localAnalysis = analyzeCase(text);
   setModelApiStatus("模型API请求中", "warn");
@@ -1261,6 +1312,19 @@ async function analyzeCaseWithModel(text) {
         return merged;
       } catch (localError) {
         console.info("Local UC model API fallback:", localError.message);
+      }
+    }
+    if (OLLAMA_MODEL) {
+      try {
+        const ollamaResult = await callOllama(text);
+        if (ollamaResult) {
+          const merged = mergeModelAnalysis(localAnalysis, ollamaResult);
+          state.modelApiSource = "ollama";
+          setModelApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+          return merged;
+        }
+      } catch (ollamaError) {
+        console.info("Ollama fallback:", ollamaError.message);
       }
     }
     state.modelApiSource = "local";
@@ -2826,38 +2890,91 @@ function renderHistory() {
   teacherAvgScore.textContent = `${avg}分`;
   teacherFocus.textContent = records[0].weakness;
 
-  records.forEach((record, index) => {
-    const item = document.createElement("article");
-    item.className = "history-item clickable";
-    item.dataset.idx = String(index);
-    const askedPercent = record.asked && typeof record.asked.percent === "number" ? record.asked.percent : 0;
-    const qualified = record.qualified || (record.correct && askedPercent >= 70 && record.rubricAvg >= 70);
-    const resultLabel = qualified ? "综合达标" : (record.correct ? "证据不足" : "待复盘");
-    const modeTag = record.mode === "exam"
-      ? `<span class="mode-tag exam">考试模式</span>`
-      : `<span class="mode-tag practice">自由练习</span>`;
-    const examTitle = record.examTitle ? `<span class="exam-title-inline">${escapeHtml(record.examTitle)}</span>` : "";
-    const askedCovered = record.asked && typeof record.asked.covered === "number" ? record.asked.covered : 0;
-    const askedTotal = record.asked && typeof record.asked.total === "number" ? record.asked.total : 0;
-    item.innerHTML = `
-      <div>
-        <div class="history-item-head">
-          <span>${escapeHtml(record.time)}</span>
-          ${modeTag}
-          ${examTitle}
+  const viewMode = historyViewMode || "list";
+  if (viewMode === "timeline") {
+    /* 时间线视图 */
+    records.forEach((record, index) => {
+      const askedPercent = record.asked && typeof record.asked.percent === "number" ? record.asked.percent : 0;
+      const qualified = record.qualified || (record.correct && askedPercent >= 70 && record.rubricAvg >= 70);
+      const askedCovered = record.asked && typeof record.asked.covered === "number" ? record.asked.covered : 0;
+      const askedTotal = record.asked && typeof record.asked.total === "number" ? record.asked.total : 0;
+      const dotClass = qualified ? "qualified" : (record.correct ? "partial" : "warn");
+      const modeTag = record.mode === "exam"
+        ? `<span class="mode-tag exam">考试</span>`
+        : `<span class="mode-tag practice">练习</span>`;
+      const node = document.createElement("div");
+      node.className = "timeline-node";
+      node.innerHTML = `
+        <div class="timeline-dot ${dotClass}"></div>
+        <div class="timeline-content clickable" data-idx="${index}">
+          <div class="timeline-head">
+            <span class="timeline-time">${escapeHtml(record.time)}</span>
+            ${modeTag}
+          </div>
+          <div class="timeline-body">
+            <strong>${escapeHtml(record.caseLabel)}</strong>
+            <div class="timeline-metrics">
+              <span>评分 <strong>${escapeHtml(record.rubricAvg)}</strong></span>
+              <span>判断 ${escapeHtml(record.selected)}</span>
+              <span>覆盖 ${askedCovered}/${askedTotal}</span>
+            </div>
+            <div class="timeline-weakness">薄弱点：${escapeHtml(record.weakness || "待分析")}</div>
+          </div>
         </div>
-        <strong>${escapeHtml(record.caseLabel)}</strong>
-        <p>学生判断：${escapeHtml(record.selected)}；系统分层：${escapeHtml(record.systemLevel)}；问诊覆盖：${askedCovered}/${askedTotal}</p>
-      </div>
-      <div class="history-score ${qualified ? "ok" : "warn"}">
-        <strong>${escapeHtml(record.rubricAvg)}</strong>
-        <small>${resultLabel}</small>
-      </div>
-    `;
-    item.addEventListener("click", () => openHistoryDetail(record));
-    historyTimeline.appendChild(item);
-  });
+      `;
+      const content = node.querySelector(".timeline-content");
+      content.addEventListener("click", () => openHistoryDetail(record));
+      historyTimeline.appendChild(node);
+    });
+  } else {
+    /* 列表视图（原样保留） */
+    records.forEach((record, index) => {
+      const item = document.createElement("article");
+      item.className = "history-item clickable";
+      item.dataset.idx = String(index);
+      const askedPercent = record.asked && typeof record.asked.percent === "number" ? record.asked.percent : 0;
+      const qualified = record.qualified || (record.correct && askedPercent >= 70 && record.rubricAvg >= 70);
+      const resultLabel = qualified ? "综合达标" : (record.correct ? "证据不足" : "待复盘");
+      const modeTag = record.mode === "exam"
+        ? `<span class="mode-tag exam">考试模式</span>`
+        : `<span class="mode-tag practice">自由练习</span>`;
+      const examTitle = record.examTitle ? `<span class="exam-title-inline">${escapeHtml(record.examTitle)}</span>` : "";
+      const askedCovered = record.asked && typeof record.asked.covered === "number" ? record.asked.covered : 0;
+      const askedTotal = record.asked && typeof record.asked.total === "number" ? record.asked.total : 0;
+      item.innerHTML = `
+        <div>
+          <div class="history-item-head">
+            <span>${escapeHtml(record.time)}</span>
+            ${modeTag}
+            ${examTitle}
+          </div>
+          <strong>${escapeHtml(record.caseLabel)}</strong>
+          <p>学生判断：${escapeHtml(record.selected)}；系统分层：${escapeHtml(record.systemLevel)}；问诊覆盖：${askedCovered}/${askedTotal}</p>
+        </div>
+        <div class="history-score ${qualified ? "ok" : "warn"}">
+          <strong>${escapeHtml(record.rubricAvg)}</strong>
+          <small>${resultLabel}</small>
+        </div>
+      `;
+      item.addEventListener("click", () => openHistoryDetail(record));
+      historyTimeline.appendChild(item);
+    });
+  }
 }
+
+let historyViewMode = "list";
+document.querySelector("#historyViewList")?.addEventListener("click", () => {
+  historyViewMode = "list";
+  document.querySelector("#historyViewList").classList.add("active");
+  document.querySelector("#historyViewTimeline")?.classList.remove("active");
+  renderHistory();
+});
+document.querySelector("#historyViewTimeline")?.addEventListener("click", () => {
+  historyViewMode = "timeline";
+  document.querySelector("#historyViewTimeline").classList.add("active");
+  document.querySelector("#historyViewList")?.classList.remove("active");
+  renderHistory();
+});
 
 function renderTeacherRubric() {
   teacherRubricList.innerHTML = "";
@@ -3518,11 +3635,34 @@ function startExamCountdown() {
   clearExamCountdownTimer();
   const node = document.querySelector("#examCountdown");
   if (!node || !state.activeExam || !state.activeExam.dueAt) return;
+  let warned = false;
   const tick = () => {
-    node.textContent = formatRemain(state.activeExam.dueAt - Date.now());
+    const remain = state.activeExam.dueAt - Date.now();
+    node.textContent = formatRemain(remain);
+    if (remain <= 0) {
+      clearExamCountdownTimer();
+      node.textContent = "已截止";
+      handleExamTimeout();
+    } else if (remain <= 300000 && !warned) {
+      warned = true;
+      node.style.color = "#c4433b";
+      node.style.fontWeight = "700";
+    }
   };
   tick();
   examCountdownTimer = setInterval(tick, 1000);
+}
+
+function handleExamTimeout() {
+  if (state.selectedAnswer) {
+    submitJudgement();
+  } else {
+    setRoute("judgement");
+    feedbackStatus.textContent = "考试已截止";
+    feedbackStatus.className = "pill warn";
+    feedbackTitle.textContent = "考试时间已到";
+    feedbackText.textContent = "作答时间已截止，请尽快提交你的判断。";
+  }
 }
 
 function applyTemplatePreset(key) {
