@@ -5371,3 +5371,199 @@ document.addEventListener("keydown", (e) => {
     if (highOpt) { highOpt.checked = true; highOpt.dispatchEvent(new Event("change")); }
   }
 });
+
+/* ---- 一键演示模式 ---- */
+let demoRunning = false;
+document.querySelector("#autoDemoBtn")?.addEventListener("click", async () => {
+  if (demoRunning) return;
+  demoRunning = true;
+  const btn = document.querySelector("#autoDemoBtn");
+  if (btn) { btn.textContent = "演示中…"; btn.disabled = true; }
+
+  /* Step 1: 导航到病例页选择高风险病例 */
+  loadSample("high");
+  setRoute("cases");
+  await sleep(800);
+
+  /* Step 2: 进入问诊并自动提问 */
+  setRoute("interview");
+  await sleep(600);
+  const autoQuestions = [
+    "你大便一天几次？什么性状？", "有没有黏液脓血便？", "肚子痛吗？有没有里急后重？",
+    "晚上症状更重吗？", "在吃什么药？规律吃吗？", "最近有停药或漏服吗？",
+    "舌象和脉象有没有记录？"
+  ];
+  for (const q of autoQuestions) {
+    if (!demoRunning) break;
+    customQuestionInput.value = q;
+    askCustomBtn.click();
+    await sleep(1000);
+  }
+  if (!demoRunning) { cleanup(); return; }
+
+  /* Step 3: 自动填写中医辨证 */
+  const expected = expectedTcmByCase.high;
+  if (tcmSyndromeSelect) tcmSyndromeSelect.value = expected.syndromeLabel;
+  if (tcmMethodSelect) tcmMethodSelect.value = "清热化湿、调气和血" ;
+  if (tcmFormulaSelect) tcmFormulaSelect.value = "芍药汤" ;
+  if (tcmSafetyText) tcmSafetyText.value = "临床用药需由有处方权的医师开具，本教学仅为辨证训练。";
+
+  /* Step 4: 作答 - 选高风险 */
+  setRoute("judgement");
+  await sleep(700);
+  const highRadio = document.querySelector('input[name="answer"][value="high"]');
+  if (highRadio) { highRadio.checked = true; highRadio.dispatchEvent(new Event("change")); }
+
+  /* Step 5: 提交判断，触发分析 */
+  await sleep(600);
+  submitJudgementBtn.click();
+  await sleep(3000);
+
+  /* Step 6: 展示反馈和雷达图 */
+  setRoute("feedback");
+  initSubSteps("page-feedback");
+  /* 自动滚动到雷达图和量规 */
+  await sleep(400);
+  const radar = document.querySelector("#radarChartCanvas");
+  if (radar) radar.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  /* 恢复按钮 */
+  cleanup();
+
+  function cleanup() {
+    demoRunning = false;
+    if (btn) { btn.textContent = "一键演示"; btn.disabled = false; }
+  }
+});
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/* ---- 成绩卡片截图导出 ---- */
+document.querySelector("#scoreCardBtn")?.addEventListener("click", () => {
+  if (!state.rubric.length) return;
+  const canvas = document.createElement("canvas");
+  canvas.width = 520;
+  canvas.height = 640;
+  const ctx = canvas.getContext("2d");
+
+  /* 背景 */
+  const grad = ctx.createLinearGradient(0, 0, 0, 640);
+  grad.addColorStop(0, "#fbf5ea");
+  grad.addColorStop(0.3, "#f9f1df");
+  grad.addColorStop(1, "#edf5e6");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 520, 640);
+
+  /* 顶部装饰 */
+  ctx.fillStyle = "#1f6f58";
+  ctx.fillRect(0, 0, 520, 6);
+
+  /* 标题 */
+  ctx.font = "bold 28px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#1f6f58";
+  ctx.textAlign = "center";
+  ctx.fillText("问衡 · 训练成绩卡", 260, 70);
+
+  ctx.font = "13px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#63706b";
+  ctx.fillText("中西医结合病例推理教学智能体", 260, 100);
+
+  /* 分割线 */
+  ctx.strokeStyle = "rgba(31,111,88,0.12)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, 125);
+  ctx.lineTo(480, 125);
+  ctx.stroke();
+
+  /* 病例与时间 */
+  const sample = samples[state.activeCase];
+  ctx.font = "14px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#172321";
+  ctx.textAlign = "left";
+  ctx.fillText(`病例：${sample ? sample.label : "自定义"}`, 40, 160);
+  ctx.fillText(`时间：${new Date().toLocaleString("zh-CN")}`, 40, 186);
+  ctx.fillText(`判断：${state.selectedAnswer === "high" ? "高风险" : state.selectedAnswer === "low" ? "低风险" : "中风险"}`, 40, 212);
+
+  /* 总分大数字 */
+  const total = averageRubricScore();
+  ctx.textAlign = "center";
+  ctx.font = "bold 56px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#1f6f58";
+  ctx.fillText(`${total}`, 260, 310);
+  ctx.font = "14px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#63706b";
+  ctx.fillText("综合评分 / 100", 260, 335);
+
+  /* 7 维打分条 */
+  const barY = 370;
+  const barH = 14;
+  const barGap = 28;
+  const barMaxW = 320;
+  ctx.textAlign = "right";
+  ctx.font = "11px 'Avenir Next', 'PingFang SC', sans-serif";
+  state.rubric.forEach((item, i) => {
+    const y = barY + i * barGap;
+    const label = normalizeRubricLabel(item.label);
+    const pct = item.rawScore || Math.round((item.score / item.weight) * 100);
+    const barW = (pct / 100) * barMaxW;
+
+    /* 标签 */
+    ctx.fillStyle = "#63706b";
+    ctx.fillText(label, 135, y + barH);
+
+    /* 背景条 */
+    ctx.fillStyle = "rgba(31,111,88,0.08)";
+    ctx.fillRect(145, y, barMaxW, barH);
+
+    /* 得分条 - 使用手动画圆角矩形以兼容旧浏览器 */
+    ctx.fillStyle = pct >= 80 ? "#1f6f58" : pct >= 60 ? "#c6903b" : "#c4433b";
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(145, y, barW, barH, 7);
+      ctx.fill();
+    } else {
+      drawRoundedRect(ctx, 145, y, barW, barH, 7);
+    }
+
+    /* 分数文字 */
+    ctx.font = "bold 12px 'Avenir Next', 'PingFang SC', sans-serif";
+    ctx.fillStyle = "#172321";
+    ctx.textAlign = "left";
+    ctx.fillText(`${item.score}/${item.weight}`, 145 + barW + 10, y + barH - 2);
+    ctx.textAlign = "right";
+  });
+
+  /* 底部声明 */
+  ctx.textAlign = "center";
+  ctx.font = "10px 'Avenir Next', 'PingFang SC', sans-serif";
+  ctx.fillStyle = "#63706b";
+  ctx.fillText("仅用于医学教育与病例推理训练 · 不作为真实诊疗工具", 260, 618);
+
+  /* 导出 */
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `问衡成绩卡_${new Date().toISOString().slice(0, 10)}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, "image/png");
+});
+
+function drawRoundedRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+  ctx.fill();
+}
