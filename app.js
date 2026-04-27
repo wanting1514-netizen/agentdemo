@@ -958,7 +958,6 @@ function setRoute(route, options = {}) {
   }
   if (nextRoute === "judgement" && state.role === "student" && !state.selectedAnswer && !state.interview.length) {
     state.interviewReminder = "请先完成至少1次追问，再进入学生作答。";
-    window.alert("你还没有进行任何问诊。请至少完成 1 次核心追问后，再进入学生作答。");
     nextRoute = "interview";
     if (customQuestionInput) {
       setTimeout(() => customQuestionInput.focus(), 0);
