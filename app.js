@@ -1659,29 +1659,29 @@ ${question}
 
 async function callOllamaPatientStream({ question, matchedKey, profile, caseText, onToken }) {
   const interviewLog = state.interview.slice(-10).map((item) =>
-    \`学生：\${item.question}\n患者：\${item.answer}\`
+    `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
   const fallbackAnswer = localPatientAnswer(profile, matchedKey);
   const matchedLabel = matchedKey || "未匹配到具体类别";
 
-  const prompt = \`你是一个模拟患者，参与医学生问诊训练。请根据以下病例信息，用患者的口吻回答学生的问题。
+  const prompt = `你是一个模拟患者，参与医学生问诊训练。请根据以下病例信息，用患者的口吻回答学生的问题。
 
 ## 患者角色
-姓名：\${profile.name}
-角色说明：\${profile.intro}
+姓名：${profile.name}
+角色说明：${profile.intro}
 
 ## 病例信息
-\${caseText}
+${caseText}
 
 ## 现有参考答案（如有匹配到相关话题，可参考其风格和内容）
-匹配话题：\${matchedLabel}
-\${fallbackAnswer !== profile.responses.fallback ? \`参考回答：\${fallbackAnswer}\` : "无直接匹配的参考答案"}
+匹配话题：${matchedLabel}
+${fallbackAnswer !== profile.responses.fallback ? `参考回答：${fallbackAnswer}` : "无直接匹配的参考答案"}
 
-\${interviewLog ? \`## 对话历史\n\${interviewLog}\n\` : ""}
+${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
 
 ## 学生当前问题
-\${question}
+${question}
 
 ## 回答要求
 1. 用生活化的患者口吻回答，像普通人看病时的表达方式，不要用医学术语
@@ -1689,9 +1689,9 @@ async function callOllamaPatientStream({ question, matchedKey, profile, caseText
 3. 对于病例中没有明确的信息，可以表示"不太清楚"、"没太注意"、"医生说不上来"等
 4. 回答简洁自然，一般2-3句话即可，不要长篇大论
 5. 保持前后对话一致，不要和对话历史中的回答矛盾
-6. 直接用患者口吻回答，不要加"患者说："之类的前缀\`;
+6. 直接用患者口吻回答，不要加"患者说："之类的前缀`;
 
-  const response = await fetch(\`\${OLLAMA_BASE_URL}/api/generate\`, {
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -1700,7 +1700,7 @@ async function callOllamaPatientStream({ question, matchedKey, profile, caseText
       stream: true,
     }),
   });
-  if (!response.ok) throw new Error(\`Ollama HTTP \${response.status}\`);
+  if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
