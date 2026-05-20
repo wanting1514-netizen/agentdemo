@@ -3907,11 +3907,7 @@ loginForm.addEventListener("submit", (event) => {
     clearExamCountdownTimer();
     loadSample("high");
     setRole(account.role, false);
-    const hashRoute = location.hash.replace("#", "");
-    const startRoute = hashRoute && routeMeta[hashRoute] && routeAllowedForRole(hashRoute, account.role)
-      ? hashRoute
-      : roleHomeRoute[account.role];
-    setRoute(startRoute);
+    setRoute(roleHomeRoute[account.role]);
     hideSkeletonScreen();
     return;
   }
