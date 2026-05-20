@@ -1768,6 +1768,7 @@ async function askQuestion(key, customText = "") {
     setPatientApiStatus("Ollama回答中", "warn");
     const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "...", source: "pending" };
     state.interview.push(entry);
+    state.patientApiSource = "ollama";
     renderInterview();
     const streamBubble = chatLog.querySelector(".message.patient:last-child");
     chatLog.scrollTop = chatLog.scrollHeight;
