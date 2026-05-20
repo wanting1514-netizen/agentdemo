@@ -8,7 +8,7 @@ window.YANCHANG_CONFIG = {
   // 启用后，患者对话和病例分析均使用LLM动态生成，更贴近真实问诊体验
   // 示例: "qwen2.5:7b", "deepseek-r1:8b", "llama3.1:8b"
   // 需要先运行: ollama pull <模型名>
-  ollamaModel: "qwen2.5:7b",
+  ollamaModel: "qwen2.5:1.5b",
   // Ollama 服务地址，默认为 http://localhost:11434
   ollamaBaseUrl: "https://api.wenhengmed.cn",
 };
