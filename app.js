@@ -1716,7 +1716,8 @@ ${question}
         const data = JSON.parse(line);
         if (data.response) {
           fullAnswer += data.response;
-          if (onToken) onToken(fullAnswer);
+          const clean = cleanPatientPrefix(fullAnswer);
+          if (onToken) onToken(clean);
         }
         if (data.done) break;
       } catch (_) {}
@@ -1725,8 +1726,14 @@ ${question}
 
   const trimmed = fullAnswer.trim();
   if (!trimmed) throw new Error("Ollama returned empty response");
-  return trimmed;
+  return trimmed;}
+
+
+// 清理患者回答中的违规前缀
+function cleanPatientPrefix(text) {
+  return text.replace(/^患者说[：:]\s*/gm, "").trim();
 }
+
 
 async function callPatientApi({ question, matchedKey }) {
   const sample = samples[state.activeCase];
