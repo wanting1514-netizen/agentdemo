@@ -1756,18 +1756,13 @@ async function askQuestion(key, customText = "") {
   let answer = localPatientAnswer(profile, matchedKey);
   let source = "local";
 
-  // 正则匹配到则秒回；未匹配到才调 Ollama
-  if (matchedKey) {
-    // 已匹配，直接返回本地回答，秒级响应
-    state.patientApiSource = "local";
-  } else if (OLLAMA_MODEL) {
-    // 未匹配：先显示学生提问 + 流式输出患者回答
+  // Ollama 流式输出，所有问题都走大模型
+  if (OLLAMA_MODEL) {
     setPatientApiStatus("Ollama回答中", "warn");
     const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "...", source: "pending" };
     state.interview.push(entry);
     state.patientApiSource = "ollama";
     renderInterview();
-    // 流式更新最后一个气泡（renderInterview刚创建的"..."气泡）
     const streamBubble = chatLog.querySelector(".message.patient:last-child");
     chatLog.scrollTop = chatLog.scrollHeight;
     try {
@@ -1799,6 +1794,10 @@ async function askQuestion(key, customText = "") {
     renderInterview();
     updateTeacherReport("学生已完成虚拟患者追问。");
     return;
+  }
+  // Ollama 不可用时走本地话术或远程 API
+  if (matchedKey) {
+    state.patientApiSource = "local";
   } else if (ENABLE_PATIENT_API) {
     setPatientApiStatus("患者API请求中", "warn");
     try {
