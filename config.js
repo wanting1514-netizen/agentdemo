@@ -10,5 +10,5 @@ window.YANCHANG_CONFIG = {
   // 需要先运行: ollama pull <模型名>
   ollamaModel: "qwen2.5:0.5b",
   // Ollama 服务地址，默认为 http://localhost:11434
-  ollamaBaseUrl: "https://api.wenhengmed.cn",
+  ollamaBaseUrl: "http://localhost:11434",
 };
