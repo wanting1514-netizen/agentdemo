@@ -1759,11 +1759,8 @@ async function askQuestion(key, customText = "") {
   let answer = "";
   let source = "local";
 
-  // 正则匹配到则秒回；未匹配到才调 Ollama
-  if (matchedKey) {
-    // 已匹配，直接返回本地回答，秒级响应
-    state.patientApiSource = "local";
-  } else if (OLLAMA_MODEL) {
+  // 所有问题优先走 Ollama
+  if (OLLAMA_MODEL) {
     // 流式输出（带超时降级）
     setPatientApiStatus("Ollama回答中", "warn");
     const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "...", source: "pending" };
