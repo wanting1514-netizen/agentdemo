@@ -1777,16 +1777,19 @@ async function askQuestion(key, customText = "") {
     const streamBubble = chatLog.querySelector(".message.patient:last-child");
     chatLog.scrollTop = chatLog.scrollHeight;
     try {
-      const fullAnswer = await callOllamaPatientStream({
-        question,
-        matchedKey,
-        profile,
-        caseText: caseInput.value,
-        onToken: (partial) => {
-          streamBubble.textContent = partial;
-          chatLog.scrollTop = chatLog.scrollHeight;
-        },
-      });
+      const fullAnswer = await Promise.race([
+        callOllamaPatientStream({
+          question,
+          matchedKey,
+          profile,
+          caseText: caseInput.value,
+          onToken: (partial) => {
+            streamBubble.textContent = partial;
+            chatLog.scrollTop = chatLog.scrollHeight;
+          },
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("stream timeout")), 8000)),
+      ]);
       if (fullAnswer) {
         entry.answer = fullAnswer;
         entry.source = "ollama";
@@ -1797,10 +1800,19 @@ async function askQuestion(key, customText = "") {
       }
     } catch (ollamaError) {
       console.info("Ollama patient fallback:", ollamaError.message);
-      entry.answer = localPatientAnswer(profile, matchedKey);
-      entry.source = "local";
-      state.patientApiSource = "local";
-      setPatientApiStatus("Ollama不可用·本地兜底", "warn");
+      // 超时或失败时用非流式重新请求
+      if (ollamaError.message === "stream timeout") {
+        try {
+          const fallback = await callOllamaPatient({ question, matchedKey, profile, caseText: caseInput.value });
+          if (fallback) { entry.answer = fallback; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
+        } catch (_) {}
+      }
+      if (entry.source === "pending") {
+        entry.answer = localPatientAnswer(profile, matchedKey);
+        entry.source = "local";
+        state.patientApiSource = "local";
+        setPatientApiStatus("Ollama不可用·本地兜底", "warn");
+      }
     }
     renderInterview();
     updateTeacherReport("学生已完成虚拟患者追问。");
