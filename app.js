@@ -1657,6 +1657,84 @@ ${question}
   return answer;
 }
 
+
+
+async function callOllamaPatientStream({ question, matchedKey, profile, caseText, onToken }) {
+  const interviewLog = state.interview.slice(-10).map((item) =>
+    `学生：${item.question}\n患者：${item.answer}`
+  ).join("\n");
+
+  const fallbackAnswer = localPatientAnswer(profile, matchedKey);
+  const matchedLabel = matchedKey || "未匹配到具体类别";
+
+  const prompt = `你是标准化病人，参与医学生问诊训练。
+
+## 你的角色
+姓名：${profile.name}
+病情：${caseText}
+
+## 核心规则（必须遵守）
+- 学生问什么，你答什么。没问的绝不多说
+- 回答像普通人看病，口语化，1-2句
+- 不解释原因，不用"因为""可能""导致"
+- 不反问学生
+- 不加"患者说："
+
+好例子：
+  学生：你好  →  你好
+  学生：在么  →  在的
+  学生：大便怎么样  →  一天拉四五次，稀的，带血丝
+  学生：肚子疼吗  →  有点疼，一阵一阵的
+
+坏例子：
+  学生：你好  →  我最近肠胃不舒服，大便次数增多（问好而已，不用说病情）
+  学生：肚子疼吗  →  有点疼，可能是因为昨天停药了（不用解释原因）
+
+## 历史对话
+${interviewLog ? `学生：${interviewLog}\n` : "（无）"}
+
+## 当前问题
+学生：${question}
+
+回答：`;
+
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      prompt,
+      stream: true,
+    }),
+  });
+  if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullAnswer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split("\n").filter(Boolean);
+    for (const line of lines) {
+      try {
+        const data = JSON.parse(line);
+        if (data.response) {
+          fullAnswer += data.response;
+          if (onToken) onToken(fullAnswer);
+        }
+        if (data.done) break;
+      } catch (_) {}
+    }
+  }
+
+  const trimmed = fullAnswer.trim();
+  if (!trimmed) throw new Error("Ollama returned empty response");
+  return trimmed;
+}
+
 async function callPatientApi({ question, matchedKey }) {
   const sample = samples[state.activeCase];
   const profile = getPatientProfile();
@@ -1690,26 +1768,49 @@ async function askQuestion(key, customText = "") {
     // 已匹配，直接返回本地回答，秒级响应
     state.patientApiSource = "local";
   } else if (OLLAMA_MODEL) {
-    // 未匹配，尝试 Ollama 动态生成
-    setPatientApiStatus("Ollama请求中", "warn");
+    // 流式输出（带超时降级）
+    setPatientApiStatus("Ollama回答中", "warn");
+    const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "...", source: "pending" };
+    state.interview.push(entry);
+    renderInterview();
+    const streamBubble = chatLog.querySelector(".message.patient:last-child");
+    chatLog.scrollTop = chatLog.scrollHeight;
     try {
-      const ollamaAnswer = await callOllamaPatient({
-        question,
-        matchedKey,
-        profile,
-        caseText: caseInput.value,
-      });
-      if (ollamaAnswer) {
-        answer = ollamaAnswer;
-        source = "ollama";
+      const fullAnswer = await Promise.race([
+        callOllamaPatientStream({
+          question, matchedKey, profile,
+          caseText: caseInput.value,
+          onToken: (partial) => {
+            streamBubble.textContent = partial;
+            chatLog.scrollTop = chatLog.scrollHeight;
+          },
+        }),
+        new Promise((_, rj) => setTimeout(() => rj(new Error("timeout")), 10000)),
+      ]);
+      if (fullAnswer) {
+        entry.answer = fullAnswer;
+        entry.source = "ollama";
         state.patientApiSource = "ollama";
         setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+      } else {
+        throw new Error("empty");
       }
-    } catch (ollamaError) {
-      console.info("Ollama patient fallback:", ollamaError.message);
-      state.patientApiSource = "local";
-      setPatientApiStatus("Ollama不可用·本地兜底", "warn");
+    } catch (e) {
+      console.info("Ollama stream fallback:", e.message);
+      try {
+        const fb = await callOllamaPatient({ question, matchedKey, profile, caseText: caseInput.value });
+        if (fb) { entry.answer = fb; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
+      } catch (_) {}
+      if (entry.source === "pending") {
+        entry.answer = localPatientAnswer(profile, matchedKey);
+        entry.source = "local";
+        state.patientApiSource = "local";
+        setPatientApiStatus("Ollama不可用·本地兜底", "warn");
+      }
     }
+    renderInterview();
+    updateTeacherReport("学生已完成虚拟患者追问。");
+    return;
   } else if (ENABLE_PATIENT_API) {
     setPatientApiStatus("患者API请求中", "warn");
     try {
