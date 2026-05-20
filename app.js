@@ -1633,15 +1633,13 @@ ${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
 ## 学生当前问题
 ${question}
 
-## 规则
-- 像普通病人一样回答，1-2句，只回答问的那个问题
-- 绝对不说"建议"、"需要检查"、"最好"、"可能由于"、"导致"
-- 不解释原因，不反问医生
-- 口语化，像：还行/有点/不太清楚/医生说不上来
-
-好例子：学生问"大便怎么样？" → 患者答"一天拉四五次，稀的，带血丝。"
-坏例子：学生问"大便怎么样？" → 患者答"最近大便次数增多，质地稀烂，建议进一步检查以明确诊断。"（太长+有建议）
-坏例子：学生问"大便怎么样？" → 患者答"最近自行停用美沙拉嗪，但症状有所缓解。"（答非所问）`;
+## 回答要求
+1. 用生活化的患者口吻回答，像普通人看病时的表达方式，不要用医学术语
+2. 基于病例信息回答，不要编造病例中没有的症状或信息
+3. 对于病例中没有明确的信息，可以表示"不太清楚"、"没太注意"、"医生说不上来"等
+4. 回答简洁自然，一般2-3句话即可，不要长篇大论
+5. 保持前后对话一致，不要和对话历史中的回答矛盾
+6. 直接用患者口吻回答，不要加"患者说："之类的前缀`;
 
   const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
     method: "POST",
@@ -1685,15 +1683,13 @@ ${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
 ## 学生当前问题
 ${question}
 
-## 规则
-- 像普通病人一样回答，1-2句，只回答问的那个问题
-- 绝对不说"建议"、"需要检查"、"最好"、"可能由于"、"导致"
-- 不解释原因，不反问医生
-- 口语化，像：还行/有点/不太清楚/医生说不上来
-
-好例子：学生问"大便怎么样？" → 患者答"一天拉四五次，稀的，带血丝。"
-坏例子：学生问"大便怎么样？" → 患者答"最近大便次数增多，质地稀烂，建议进一步检查以明确诊断。"（太长+有建议）
-坏例子：学生问"大便怎么样？" → 患者答"最近自行停用美沙拉嗪，但症状有所缓解。"（答非所问）`;
+## 回答要求
+1. 用生活化的患者口吻回答，像普通人看病时的表达方式，不要用医学术语
+2. 基于病例信息回答，不要编造病例中没有的症状或信息
+3. 对于病例中没有明确的信息，可以表示"不太清楚"、"没太注意"、"医生说不上来"等
+4. 回答简洁自然，一般2-3句话即可，不要长篇大论
+5. 保持前后对话一致，不要和对话历史中的回答矛盾
+6. 直接用患者口吻回答，不要加"患者说："之类的前缀`;
 
   const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
     method: "POST",
@@ -1720,8 +1716,7 @@ ${question}
         const data = JSON.parse(line);
         if (data.response) {
           fullAnswer += data.response;
-          const clean = cleanPatientPrefix(fullAnswer);
-          if (onToken) onToken(clean);
+          if (onToken) onToken(fullAnswer);
         }
         if (data.done) break;
       } catch (_) {}
@@ -1730,14 +1725,8 @@ ${question}
 
   const trimmed = fullAnswer.trim();
   if (!trimmed) throw new Error("Ollama returned empty response");
-  return trimmed;}
-
-
-// 清理患者回答中的违规前缀
-function cleanPatientPrefix(text) {
-  return text.replace(/^患者说[：:]\s*/gm, "").trim();
+  return trimmed;
 }
-
 
 async function callPatientApi({ question, matchedKey }) {
   const sample = samples[state.activeCase];
@@ -1777,19 +1766,16 @@ async function askQuestion(key, customText = "") {
     const streamBubble = chatLog.querySelector(".message.patient:last-child");
     chatLog.scrollTop = chatLog.scrollHeight;
     try {
-      const fullAnswer = await Promise.race([
-        callOllamaPatientStream({
-          question,
-          matchedKey,
-          profile,
-          caseText: caseInput.value,
-          onToken: (partial) => {
-            streamBubble.textContent = partial;
-            chatLog.scrollTop = chatLog.scrollHeight;
-          },
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("stream timeout")), 8000)),
-      ]);
+      const fullAnswer = await callOllamaPatientStream({
+        question,
+        matchedKey,
+        profile,
+        caseText: caseInput.value,
+        onToken: (partial) => {
+          streamBubble.textContent = partial;
+          chatLog.scrollTop = chatLog.scrollHeight;
+        },
+      });
       if (fullAnswer) {
         entry.answer = fullAnswer;
         entry.source = "ollama";
@@ -1800,19 +1786,10 @@ async function askQuestion(key, customText = "") {
       }
     } catch (ollamaError) {
       console.info("Ollama patient fallback:", ollamaError.message);
-      // 超时或失败时用非流式重新请求
-      if (ollamaError.message === "stream timeout") {
-        try {
-          const fallback = await callOllamaPatient({ question, matchedKey, profile, caseText: caseInput.value });
-          if (fallback) { entry.answer = fallback; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
-        } catch (_) {}
-      }
-      if (entry.source === "pending") {
-        entry.answer = localPatientAnswer(profile, matchedKey);
-        entry.source = "local";
-        state.patientApiSource = "local";
-        setPatientApiStatus("Ollama不可用·本地兜底", "warn");
-      }
+      entry.answer = localPatientAnswer(profile, matchedKey);
+      entry.source = "local";
+      state.patientApiSource = "local";
+      setPatientApiStatus("Ollama不可用·本地兜底", "warn");
     }
     renderInterview();
     updateTeacherReport("学生已完成虚拟患者追问。");
