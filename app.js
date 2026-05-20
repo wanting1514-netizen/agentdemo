@@ -955,12 +955,6 @@ function setRoute(route, options = {}) {
   if (state.mode === "exam" && examCountdownTimer) {
     clearExamCountdownTimer();
   }
-  /* 一键演示中断：用户手动导航时停止自动演示 */
-  if (demoRunning && !options.keepRole) {
-    demoRunning = false;
-    const btn = document.querySelector("#autoDemoBtn");
-    if (btn) { btn.textContent = "一键演示"; btn.disabled = false; }
-  }
   let nextRoute = route === "home" ? roleHomeRoute[state.role] : route;
   nextRoute = routeMeta[nextRoute] ? nextRoute : roleHomeRoute[state.role];
   if (!options.keepRole) {
@@ -1506,7 +1500,9 @@ function renderInterview() {
       ? (coverage.percent >= 80 ? "pill success" : "pill warn")
       : (state.interview.length ? "pill warn" : "pill neutral");
   }
-  if (state.patientApiSource === "openai") {
+  if (state.patientApiSource === "ollama") {
+    setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+  } else if (state.patientApiSource === "openai") {
     setPatientApiStatus("OpenAI患者API", "success");
   } else if (state.patientApiSource === "error") {
     setPatientApiStatus("API失败·本地兜底", "warn");
@@ -1543,34 +1539,55 @@ function appendMessage(role, text) {
 }
 
 function matchQuestionKey(text) {
-  if (/哪里不舒服|哪.*不舒服|怎么不舒服|什么症状|主要症状|哪里难受|最近怎么样|情况怎么样|身体怎么样|肠胃.*(怎么样|如何)|肚子.*(怎么样|如何)/.test(text)) return "overview";
-  if (/吃饭|食欲|胃口|纳食|饭量|吃得|饮食|进食/.test(text)) return "appetite";
-  const asksFever = /发热|发烧|低热|体温|烧不烧/.test(text);
+  // overview: 整体情况/主诉
+  if (/哪里不舒服|哪.*不舒服|怎么不舒服|什么症状|主要症状|哪里难受|最近怎么样|情况怎么样|身体怎么样|肠胃.*(怎么样|如何)|肚子.*(怎么样|如何)|怎么回事|说说.*情况|具体.*(说说|讲讲|描述)|主要.*问题|能.*说说|讲一下|说一下.*情况/.test(text)) return "overview";
+  // stool: 大便次数/性状
+  if (/大便|排便|拉肚子|拉稀|拉.*(几次|多少|什么样|怎样)|便(便|秘)|次数|屎|性状|成形|不成形|稀(便|烂)|(一天|每天).*(几次|多少)|腹泻|窜稀|拉(的|得).*(多|少|稀|稠|什么样)/.test(text)) return "stool";
+  // blood: 脓血/黏液
+  if (/血|脓血|黏液|粘液|便血|红的|红红|带(血|红)|出血|见红|有血|便里.*(红|血)|擦拭.*(红|血)|纸上.*(红|血)/.test(text)) return "blood";
+  // pain: 腹痛/里急后重
+  if (/腹痛|里急后重|肚子(痛|疼)|腹部(不舒服|难受|痛|疼)|一阵.*(疼|痛)|(疼|痛).*(一阵|一下)|坠胀|下坠|排不(干净|完|尽)|老想.*厕所|总想.*厕所|想.*拉.*没有/.test(text)) return "pain";
+  // night: 夜间症状/睡眠
+  if (/夜|睡眠|睡觉|睡(得|的)|醒|憋醒|半夜|晚上|夜里|凌晨|入睡|眠|梦多|梦|失眠/.test(text)) return "night";
+  // medication: 用药依从性
+  if (/药|美沙拉嗪|停药|漏服|依从|规律|按时|吃药|服药|用药|医嘱|自行|自己.*停|忘(记|了).*药|没有.*吃.*药|治疗.*药|在吃.*药|用(的|得).*什么药|处方|西药/.test(text)) return "medication";
+  // exam: 检查/复查
+  if (/检查|粪钙|钙卫|CRP|内镜|指标|化验|复查|查过|做过|肠镜|大便.*(检查|化验|测|验)|炎症.*(指标|检查)|化验.*(大便|便)|抽血|验血|血常规/.test(text)) return "exam";
+  // tongue: 舌脉
+  if (/舌|脉|苔|舌苔|舌头|脉象|脉博|把脉|号脉|看.*舌头|舌.*(红|淡|胖|紫|暗)/.test(text)) return "tongue";
+  // appetite: 食欲饮食
+  if (/吃饭|食欲|胃口|纳食|饭量|吃得|饮食|进食|吃.*(多少|什么|东西|饭)|不想吃|吃不下|食量|饭.*(怎么样|如何)/.test(text)) return "appetite";
+  // fatigue: 乏力
+  if (/乏力|没劲|精神|累|力气|疲劳|没力|没.*(力气|劲|精神)|动不动.*累|走.*累|(身上|浑身|人).*(没劲|没力|乏力)/.test(text)) return "fatigue";
+  // fever: 发热
+  if (/发热|发烧|低热|体温|烧不烧|发不发烧|退烧|烧.*(度|几)|身上.*烫|热.*不热|有没有.*烧/.test(text)) return "fever";
+  // weight: 体重变化
+  if (/体重|消瘦|瘦了|掉秤|重了|胖了|称.*体重|体重.*(变|轻|重|少|多|下降)/.test(text)) return "weight";
+  // systemic: 系统性问题
+  const asksFever = /发热|发烧|低热|体温|烧/.test(text);
   const asksFatigue = /乏力|没劲|精神|累|力气|疲劳/.test(text);
   const asksWeight = /体重|消瘦|瘦了|掉秤/.test(text);
   if ([asksFever, asksFatigue, asksWeight].filter(Boolean).length >= 2) return "systemic";
-  if (asksFatigue) return "fatigue";
-  if (asksFever) return "fever";
-  if (asksWeight) return "weight";
-  if (/多久|几天|几周|什么时候|啥时候|病程|开始|持续|反复|最近一阵/.test(text)) return "duration";
-  if (/恶心|呕吐|想吐|腹胀|胀气|肠鸣|咕噜|反酸|胃疼|胃痛/.test(text)) return "giOther";
-  if (/吃了.*(加重|不舒服)|诱因|辛辣|凉的|油腻|饮食.*(影响|关系)|和吃.*有关/.test(text)) return "dietTrigger";
-  if (/影响.*(生活|学习|工作|出门)|上课|上班|活动|日常|能不能出门/.test(text)) return "dailyLife";
-  if (/关节|口腔|口疮|溃疡|皮疹|皮肤|眼睛/.test(text)) return "extraIntestinal";
-  if (/以前|既往|过去|曾经|复发|诊断|病史/.test(text)) return "pastHistory";
-  if (/家族|家里|父母|亲属|遗传/.test(text)) return "familyHistory";
-  if (/大便|排便|次数|性状/.test(text)) return "stool";
-  if (/血|脓血|黏液|粘液|便血/.test(text)) return "blood";
-  if (/腹痛|里急后重|肚子痛|肚子疼|腹部不舒服|肚子不舒服/.test(text)) return "pain";
-  if (/夜|睡眠|夜间/.test(text)) return "night";
-  if (/药|美沙拉嗪|规律|停药|漏服|依从/.test(text)) return "medication";
-  if (/检查|粪钙|钙卫|CRP|内镜|指标|化验/.test(text)) return "exam";
-  if (/舌|脉|苔/.test(text)) return "tongue";
+  if (/全身|整体.*(状况|情况|状态)|系统.*(症状|表现)|一般.*情况/.test(text)) return "systemic";
+  // duration: 病程时间
+  if (/多久|几天|几周|什么时候|啥时候|病程|开始|持续|反复|最近一阵|多长时间|哪.*开始|发现.*(多久|几天)|(一直|老是|经常).*(这样|拉|不舒服)/.test(text)) return "duration";
+  // giOther: 其他消化道症状
+  if (/恶心|呕吐|想吐|腹胀|胀气|肠鸣|咕噜|反酸|胃疼|胃痛|烧心|打嗝|嗳气|消化不良|屁多|放屁/.test(text)) return "giOther";
+  // dietTrigger: 饮食诱因
+  if (/吃了.*(加重|不舒服)|诱因|辛辣|凉的|油腻|饮食.*(影响|关系)|和吃.*有关|什么.*(引起|导致|诱发)|吃.*(辣|凉|油|生冷|海鲜|喝酒).*(不舒服|加重|拉)|忌口|注意.*饮食/.test(text)) return "dietTrigger";
+  // dailyLife: 对日常生活影响
+  if (/影响.*(生活|学习|工作|出门)|上课|上班|活动|日常|能不能出门|影响.*大.*(不|吗)|碍事|耽误/.test(text)) return "dailyLife";
+  // extraIntestinal: 肠外表现
+  if (/关节|口腔|口疮|溃疡|皮疹|皮肤|眼睛|虹膜|葡萄膜|肝胆|胆管/.test(text)) return "extraIntestinal";
+  // pastHistory: 既往史
+  if (/以前|既往|过去|曾经|复发|诊断|病史|得过|犯过|原来|之前.*(也|得|犯|发)|之前.*(怎么样|情况)/.test(text)) return "pastHistory";
+  // familyHistory: 家族史
+  if (/家族|家里|父母|亲属|遗传|家人|兄弟姐妹|子女|祖辈|有没有.*人.*(得过|类似|同样)/.test(text)) return "familyHistory";
   // 胸痛鉴别相关
   if (/胸闷|胸痛|心绞痛|压榨|心前区|心脏/.test(text)) return "painLocation";
   if (/放射|串到|左肩|左臂|手臂麻/.test(text)) return "painRadiation";
   if (/持续|多久|时间/.test(text) && /胸痛|心脏/.test(text)) return "painDuration";
-  if (/诱发|缓解|硝酸甘油|休息/.test(text)) return "triggerRelief";
+  if (/诱发|缓解|硝酸甘油|休息/.test(text) && /胸痛|心脏/.test(text)) return "triggerRelief";
   if (/高血压|糖尿病|高血脂|抽烟|吸烟|家族史/.test(text)) return "riskFactors";
   // 咳嗽相关
   if (/咳嗽|咳痰|干咳|有痰/.test(text)) return "coughDuration";
@@ -1588,6 +1605,56 @@ function matchQuestionKey(text) {
 
 function localPatientAnswer(profile, matchedKey) {
   return profile.responses[matchedKey] || profile.responses.fallback || "这个信息需要教师在病例库中补充。";
+}
+
+async function callOllamaPatient({ question, matchedKey, profile, caseText }) {
+  const interviewLog = state.interview.slice(-10).map((item) =>
+    `学生：${item.question}\n患者：${item.answer}`
+  ).join("\n");
+
+  const fallbackAnswer = localPatientAnswer(profile, matchedKey);
+  const matchedLabel = matchedKey || "未匹配到具体类别";
+
+  const prompt = `你是一个模拟患者，参与医学生问诊训练。请根据以下病例信息，用患者的口吻回答学生的问题。
+
+## 患者角色
+姓名：${profile.name}
+角色说明：${profile.intro}
+
+## 病例信息
+${caseText}
+
+## 现有参考答案（如有匹配到相关话题，可参考其风格和内容）
+匹配话题：${matchedLabel}
+${fallbackAnswer !== profile.responses.fallback ? `参考回答：${fallbackAnswer}` : "无直接匹配的参考答案"}
+
+${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
+
+## 学生当前问题
+${question}
+
+## 回答要求
+1. 用生活化的患者口吻回答，像普通人看病时的表达方式，不要用医学术语
+2. 基于病例信息回答，不要编造病例中没有的症状或信息
+3. 对于病例中没有明确的信息，可以表示"不太清楚"、"没太注意"、"医生说不上来"等
+4. 回答简洁自然，一般2-3句话即可，不要长篇大论
+5. 保持前后对话一致，不要和对话历史中的回答矛盾
+6. 直接用患者口吻回答，不要加"患者说："之类的前缀`;
+
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      prompt,
+      stream: false,
+    }),
+  });
+  if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
+  const data = await response.json();
+  const answer = (data.response || "").trim();
+  if (!answer) throw new Error("Ollama returned empty response");
+  return answer;
 }
 
 async function callPatientApi({ question, matchedKey }) {
@@ -1617,34 +1684,48 @@ async function askQuestion(key, customText = "") {
   state.interviewReminder = "";
   let answer = localPatientAnswer(profile, matchedKey);
   let source = "local";
-  if (!ENABLE_PATIENT_API) {
-    state.patientApiSource = "local";
-    state.interview.push({
-      key: matchedKey,
-      label: prompt ? prompt.label : "自定义追问",
-      question,
-      answer,
-      source,
-    });
-    renderInterview();
-    updateTeacherReport("学生已完成虚拟患者追问。");
-    return;
-  }
-  setPatientApiStatus("患者API请求中", "warn");
-  try {
-    const apiResult = await callPatientApi({ question, matchedKey });
-    if (apiResult && apiResult.answer) {
-      answer = apiResult.answer;
-      source = apiResult.source || "openai";
-      state.patientApiSource = source === "openai" ? "openai" : "local";
-    } else {
+
+  // 优先尝试 Ollama 大模型生成动态患者回答
+  if (OLLAMA_MODEL) {
+    setPatientApiStatus("Ollama请求中", "warn");
+    try {
+      const ollamaAnswer = await callOllamaPatient({
+        question,
+        matchedKey,
+        profile,
+        caseText: caseInput.value,
+      });
+      if (ollamaAnswer) {
+        answer = ollamaAnswer;
+        source = "ollama";
+        state.patientApiSource = "ollama";
+        setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+      }
+    } catch (ollamaError) {
+      console.info("Ollama patient fallback:", ollamaError.message);
       state.patientApiSource = "local";
+      setPatientApiStatus("Ollama不可用·本地兜底", "warn");
     }
-  } catch (error) {
-    state.patientApiSource = "error";
-    source = "local-fallback";
-    console.info("Patient API fallback:", error.message);
+  } else if (ENABLE_PATIENT_API) {
+    setPatientApiStatus("患者API请求中", "warn");
+    try {
+      const apiResult = await callPatientApi({ question, matchedKey });
+      if (apiResult && apiResult.answer) {
+        answer = apiResult.answer;
+        source = apiResult.source || "openai";
+        state.patientApiSource = source === "openai" ? "openai" : "local";
+      } else {
+        state.patientApiSource = "local";
+      }
+    } catch (error) {
+      state.patientApiSource = "error";
+      source = "local-fallback";
+      console.info("Patient API fallback:", error.message);
+    }
+  } else {
+    state.patientApiSource = "local";
   }
+
   state.interview.push({
     key: matchedKey,
     label: prompt ? prompt.label : "自定义追问",
@@ -5522,74 +5603,6 @@ document.addEventListener("keydown", (e) => {
     if (highOpt) { highOpt.checked = true; highOpt.dispatchEvent(new Event("change")); }
   }
 });
-
-/* ---- 一键演示模式 ---- */
-let demoRunning = false;
-document.querySelector("#autoDemoBtn")?.addEventListener("click", async () => {
-  if (demoRunning) return;
-  demoRunning = true;
-  const btn = document.querySelector("#autoDemoBtn");
-  if (btn) { btn.textContent = "演示中…"; btn.disabled = true; }
-
-  /* Step 1: 导航到病例页选择高风险病例 */
-  loadSample("high");
-  setRoute("cases");
-  await sleep(800);
-
-  /* Step 2: 进入问诊并自动提问 */
-  setRoute("interview");
-  await sleep(600);
-  const autoQuestions = [
-    "你大便一天几次？什么性状？", "有没有黏液脓血便？", "肚子痛吗？有没有里急后重？",
-    "晚上症状更重吗？", "在吃什么药？规律吃吗？", "最近有停药或漏服吗？",
-    "舌象和脉象有没有记录？"
-  ];
-  for (const q of autoQuestions) {
-    if (!demoRunning) break;
-    customQuestionInput.value = q;
-    askCustomBtn.click();
-    await sleep(1000);
-  }
-  if (!demoRunning) { cleanup(); return; }
-
-  /* Step 3: 自动填写中医辨证 */
-  const expected = expectedTcmByCase.high;
-  if (tcmSyndromeSelect) tcmSyndromeSelect.value = expected.syndromeLabel;
-  if (tcmMethodSelect) tcmMethodSelect.value = "清热化湿、调气和血" ;
-  if (tcmFormulaSelect) tcmFormulaSelect.value = "芍药汤" ;
-  if (tcmSafetyText) tcmSafetyText.value = "临床用药需由有处方权的医师开具，本教学仅为辨证训练。";
-
-  /* Step 4: 作答 - 选高风险 */
-  setRoute("judgement");
-  await sleep(700);
-  const highRadio = document.querySelector('input[name="answer"][value="high"]');
-  if (highRadio) { highRadio.checked = true; highRadio.dispatchEvent(new Event("change")); }
-
-  /* Step 5: 提交判断，触发分析 */
-  await sleep(600);
-  submitJudgementBtn.click();
-  await sleep(3000);
-
-  /* Step 6: 展示反馈和雷达图 */
-  setRoute("feedback");
-  initSubSteps("page-feedback");
-  /* 自动滚动到雷达图和量规 */
-  await sleep(400);
-  const radar = document.querySelector("#radarChartCanvas");
-  if (radar) radar.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  /* 恢复按钮 */
-  cleanup();
-
-  function cleanup() {
-    demoRunning = false;
-    if (btn) { btn.textContent = "一键演示"; btn.disabled = false; }
-  }
-});
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /* ---- 成绩卡片截图导出 ---- */
 document.querySelector("#scoreCardBtn")?.addEventListener("click", () => {
