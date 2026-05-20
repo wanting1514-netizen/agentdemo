@@ -1685,8 +1685,12 @@ async function askQuestion(key, customText = "") {
   let answer = localPatientAnswer(profile, matchedKey);
   let source = "local";
 
-  // 优先尝试 Ollama 大模型生成动态患者回答
-  if (OLLAMA_MODEL) {
+  // 正则匹配到则秒回；未匹配到才调 Ollama
+  if (matchedKey) {
+    // 已匹配，直接返回本地回答，秒级响应
+    state.patientApiSource = "local";
+  } else if (OLLAMA_MODEL) {
+    // 未匹配，尝试 Ollama 动态生成
     setPatientApiStatus("Ollama请求中", "warn");
     try {
       const ollamaAnswer = await callOllamaPatient({
