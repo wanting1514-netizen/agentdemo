@@ -1506,8 +1506,10 @@ function renderInterview() {
     setPatientApiStatus("OpenAI患者API", "success");
   } else if (state.patientApiSource === "error") {
     setPatientApiStatus("API失败·本地兜底", "warn");
+  } else if (OLLAMA_MODEL) {
+    setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "neutral");
   } else {
-    setPatientApiStatus("本地患者话术", "neutral");
+    setPatientApiStatus("本地话术", "neutral");
   }
 
   chatLog.innerHTML = "";
@@ -3820,7 +3822,7 @@ function loadSample(key) {
   document.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
   parseStatus.textContent = "提交后生成";
   parseStatus.className = "pill neutral";
-  setPatientApiStatus("本地患者话术", "neutral");
+  setPatientApiStatus(OLLAMA_MODEL ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
   setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   renderRiskBadge();
   tagCloud.innerHTML = "";
@@ -3863,7 +3865,7 @@ function resetCustomCase() {
   document.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
   parseStatus.textContent = "请输入病例";
   parseStatus.className = "pill warn";
-  setPatientApiStatus("本地患者话术", "neutral");
+  setPatientApiStatus(OLLAMA_MODEL ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
   setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   tagCloud.innerHTML = "";
   structuredTable.innerHTML = "";
