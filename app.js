@@ -1603,17 +1603,13 @@ function matchQuestionKey(text) {
   return "";
 }
 
-function localPatientAnswer(profile, matchedKey) {
-  return profile.responses[matchedKey] || profile.responses.fallback || "这个信息需要教师在病例库中补充。";
-}
-
 async function callOllamaPatient({ question, matchedKey, profile, caseText }) {
   const interviewLog = state.interview.slice(-10).map((item) =>
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
-  const fallbackAnswer = localPatientAnswer(profile, matchedKey);
   const matchedLabel = matchedKey || "未匹配到具体类别";
+  const fallbackAnswer = "";
 
   const prompt = `你是一个模拟患者，参与医学生问诊训练。请根据以下病例信息，用患者的口吻回答学生的问题。
 
@@ -1626,7 +1622,7 @@ ${caseText}
 
 ## 现有参考答案（如有匹配到相关话题，可参考其风格和内容）
 匹配话题：${matchedLabel}
-${fallbackAnswer !== profile.responses.fallback ? `参考回答：${fallbackAnswer}` : "无直接匹配的参考答案"}
+"无匹配的参考答案"
 
 ${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
 
@@ -1664,7 +1660,7 @@ async function callOllamaPatientStream({ question, matchedKey, profile, caseText
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
-  const fallbackAnswer = localPatientAnswer(profile, matchedKey);
+  const fallbackAnswer = "";
   const matchedLabel = matchedKey || "未匹配到具体类别";
 
   const prompt = `你是标准化病人，参与医学生问诊训练。
@@ -1760,7 +1756,7 @@ async function askQuestion(key, customText = "") {
   const question = normalizeText(customText || (prompt ? prompt.question : ""));
   if (!question) return;
   state.interviewReminder = "";
-  let answer = localPatientAnswer(profile, matchedKey);
+  let answer = "";
   let source = "local";
 
   // 正则匹配到则秒回；未匹配到才调 Ollama
@@ -1802,7 +1798,7 @@ async function askQuestion(key, customText = "") {
         if (fb) { entry.answer = fb; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
       } catch (_) {}
       if (entry.source === "pending") {
-        entry.answer = localPatientAnswer(profile, matchedKey);
+        entry.answer = "抱歉，我现在不太舒服，能再问一遍吗？";
         entry.source = "local";
         state.patientApiSource = "local";
         setPatientApiStatus("Ollama不可用·本地兜底", "warn");
