@@ -4536,3 +4536,22 @@ body.dark-mode .heatmap-cell.high .heatmap-count { color: #f0a080; }
 }
 .teacher-action-btn.demo-teacher-btn small { color: rgba(255,255,255,0.8); }
 
+/* 流式输出思考中动画 */
+.message.patient.thinking {
+  position: relative;
+  color: transparent;
+}
+.message.patient.thinking::after {
+  content: "正在思考中...";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted, #63706b);
+  animation: thinking-pulse 1.5s ease-in-out infinite;
+}
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+

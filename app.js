@@ -406,6 +406,7 @@ const REMOTE_PATIENT_API_URL = configText(runtimeConfig.patientApiUrl);
 const ENABLE_PATIENT_API = Boolean(REMOTE_PATIENT_API_URL);
 const OLLAMA_MODEL = configText(runtimeConfig.ollamaModel);
 const OLLAMA_BASE_URL = configText(runtimeConfig.ollamaBaseUrl) || "http://localhost:11434";
+const DEMO_MODE = Boolean(runtimeConfig.demoMode);
 
 function readStoredHistory() {
   try {
@@ -1341,7 +1342,7 @@ async function analyzeCaseWithModel(text) {
         console.info("Local UC model API fallback:", localError.message);
       }
     }
-    if (OLLAMA_MODEL) {
+    if (OLLAMA_MODEL && !DEMO_MODE) {
       try {
         const ollamaResult = await callOllama(text);
         if (ollamaResult) {
@@ -1605,47 +1606,79 @@ function matchQuestionKey(text) {
   return "";
 }
 
+// 将医学术语转为患者口语描述
+function convertToPatientSpeak(text) {
+  const replacements = [
+    [/黏液脓血/g, "黏糊糊的东西和血丝"],
+    [/里急后重/g, "老想上厕所又拉不干净"],
+    [/苔白腻/g, "舌头上白白厚厚的"],
+    [/苔薄白/g, "舌头正常"],
+    [/舌红/g, "舌头有点红"],
+    [/舌淡红/g, "舌头颜色还好"],
+    [/脉细/g, ""],
+    [/脉平/g, ""],
+    [/纳食一般/g, "胃口一般"],
+    [/纳食可/g, "吃饭还行"],
+    [/乏力/g, "没什么力气"],
+    [/美沙拉嗪/g, "那个肠炎药"],
+    [/质稀/g, "稀的"],
+    [/4-5次\/日/g, "一天四五次"],
+    [/1次\/日/g, "一天一次"],
+    [/夜间偶有便意/g, "晚上偶尔也想上厕所"],
+    [/睡眠欠佳/g, "睡不太好"],
+    [/无发热/g, "没发烧"],
+    [/伴腹痛/g, "肚子还疼"],
+    [/无腹痛/g, "肚子不疼"],
+    [/无里急后重/g, "不会老想上厕所"],
+    [/成形/g, "成形的"],
+    [/规律服药/g, "药都按时吃着"],
+    [/近期症状稳定/g, "最近还算平稳"],
+  ];
+  let result = text;
+  for (const [pattern, replacement] of replacements) {
+    result = result.replace(pattern, replacement);
+  }
+  return result.replace(/[，。]\s*[，。]/g, "，").replace(/^[，。]+|[，。]+$/g, "").trim();
+}
+
+// 问候语快速拦截（小模型对问候的指令遵循差，直接返回固定回答）
+function isGreeting(text) {
+  return /^(你好|您好|喃|嘿|在吗|在么|在不|在的吗|医生好|hello|hi)[!！？\?。，,]*$/i.test(text.trim());
+}
+
 async function callOllamaPatient({ question, matchedKey, profile, caseText }) {
+  if (isGreeting(question)) return "你好，医生。";
   const interviewLog = state.interview.slice(-10).map((item) =>
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
-  const matchedLabel = matchedKey || "未匹配到具体类别";
-  const fallbackAnswer = "";
+  const patientCaseText = convertToPatientSpeak(caseText);
+  const systemPrompt = `你扮演一个在医院看病的患者，只用大白话回答医生的问题。每次回答不超过15个字。`;
 
-  const prompt = `你是一个模拟患者，参与医学生问诊训练。请根据以下病例信息，用患者的口吻回答学生的问题。
+  const prompt = `示例对话：
+医生：你好 → 患者：你好
+医生：哪里不舒服 → 患者：拉肚子，肚子疼
+医生：大便怎么样 → 患者：一天四五次，稀的带血
+医生：肚子疼吗 → 患者：疼，一阵一阵的
 
-## 患者角色
-姓名：${profile.name}
-角色说明：${profile.intro}
+[你的情况] ${patientCaseText}
 
-## 病例信息
-${caseText}
-
-## 现有参考答案（如有匹配到相关话题，可参考其风格和内容）
-匹配话题：${matchedLabel}
-"无匹配的参考答案"
-
-${interviewLog ? `## 对话历史\n${interviewLog}\n` : ""}
-
-## 学生当前问题
-${question}
-
-## 回答要求
-1. 用生活化的患者口吻回答，像普通人看病时的表达方式，不要用医学术语
-2. 基于病例信息回答，不要编造病例中没有的症状或信息
-3. 对于病例中没有明确的信息，可以表示"不太清楚"、"没太注意"、"医生说不上来"等
-4. 回答简洁自然，一般2-3句话即可，不要长篇大论
-5. 保持前后对话一致，不要和对话历史中的回答矛盾
-6. 直接用患者口吻回答，不要加"患者说："之类的前缀`;
+${interviewLog ? `之前的对话：\n${interviewLog}\n\n` : ""}医生：${question}
+患者：`;
 
   const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: OLLAMA_MODEL,
+      system: systemPrompt,
       prompt,
       stream: false,
+      options: {
+        num_predict: 40,
+        temperature: 0.7,
+        repeat_penalty: 1.2,
+      },
     }),
   });
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
@@ -1658,51 +1691,42 @@ ${question}
 
 
 async function callOllamaPatientStream({ question, matchedKey, profile, caseText, onToken }) {
+  if (isGreeting(question)) {
+    const greeting = "你好，医生。";
+    if (onToken) onToken(greeting);
+    return greeting;
+  }
   const interviewLog = state.interview.slice(-10).map((item) =>
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
-  const fallbackAnswer = "";
-  const matchedLabel = matchedKey || "未匹配到具体类别";
+  const patientCaseText = convertToPatientSpeak(caseText);
+  const systemPrompt = `你扮演一个在医院看病的患者，只用大白话回答医生的问题。每次回答不超过15个字。`;
 
-  const prompt = `你是标准化病人，参与医学生问诊训练。
+  const prompt = `示例对话：
+医生：你好 → 患者：你好
+医生：哪里不舒服 → 患者：拉肚子，肚子疼
+医生：大便怎么样 → 患者：一天四五次，稀的带血
+医生：肚子疼吗 → 患者：疼，一阵一阵的
 
-## 你的角色
-姓名：${profile.name}
-病情：${caseText}
+[你的情况] ${patientCaseText}
 
-## 核心规则（必须遵守）
-- 学生问什么，你答什么。没问的绝不多说
-- 回答像普通人看病，口语化，1-2句
-- 不解释原因，不用"因为""可能""导致"
-- 不反问学生
-- 不加"患者说："
-
-好例子：
-  学生：你好  →  你好
-  学生：在么  →  在的
-  学生：大便怎么样  →  一天拉四五次，稀的，带血丝
-  学生：肚子疼吗  →  有点疼，一阵一阵的
-
-坏例子：
-  学生：你好  →  我最近肠胃不舒服，大便次数增多（问好而已，不用说病情）
-  学生：肚子疼吗  →  有点疼，可能是因为昨天停药了（不用解释原因）
-
-## 历史对话
-${interviewLog ? `学生：${interviewLog}\n` : "（无）"}
-
-## 当前问题
-学生：${question}
-
-回答：`;
+${interviewLog ? `之前的对话：\n${interviewLog}\n\n` : ""}医生：${question}
+患者：`;
 
   const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: OLLAMA_MODEL,
+      system: systemPrompt,
       prompt,
       stream: true,
+      options: {
+        num_predict: 40,
+        temperature: 0.7,
+        repeat_penalty: 1.2,
+      },
     }),
   });
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
@@ -1711,12 +1735,15 @@ ${interviewLog ? `学生：${interviewLog}\n` : "（无）"}
   const decoder = new TextDecoder();
   let fullAnswer = "";
 
+  let buffer = "";
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split("\n").filter(Boolean);
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || ""; // 最后一段可能不完整，留到下一轮
     for (const line of lines) {
+      if (!line.trim()) continue;
       try {
         const data = JSON.parse(line);
         if (data.response) {
@@ -1726,6 +1753,16 @@ ${interviewLog ? `学生：${interviewLog}\n` : "（无）"}
         if (data.done) break;
       } catch (_) {}
     }
+  }
+  // 处理 buffer 中可能残留的最后一行
+  if (buffer.trim()) {
+    try {
+      const data = JSON.parse(buffer);
+      if (data.response) {
+        fullAnswer += data.response;
+        if (onToken) onToken(fullAnswer);
+      }
+    } catch (_) {}
   }
 
   const trimmed = fullAnswer.trim();
@@ -1761,27 +1798,33 @@ async function askQuestion(key, customText = "") {
   let answer = "";
   let source = "local";
 
-  // 所有问题优先走 Ollama
-  if (OLLAMA_MODEL) {
+  // 所有问题优先走 Ollama（演示模式跳过远程调用）
+  if (OLLAMA_MODEL && !DEMO_MODE) {
     // 流式输出（带超时降级）
     setPatientApiStatus("Ollama回答中", "warn");
-    const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "...", source: "pending" };
+    const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "正在思考中...", source: "pending" };
     state.interview.push(entry);
     state.patientApiSource = "ollama";
     renderInterview();
     const streamBubble = chatLog.querySelector(".message.patient:last-child");
+    if (streamBubble) streamBubble.classList.add("thinking");
     chatLog.scrollTop = chatLog.scrollHeight;
+    let firstTokenReceived = false;
     try {
       const fullAnswer = await Promise.race([
         callOllamaPatientStream({
           question, matchedKey, profile,
           caseText: caseInput.value,
           onToken: (partial) => {
+            if (!firstTokenReceived) {
+              firstTokenReceived = true;
+              if (streamBubble) streamBubble.classList.remove("thinking");
+            }
             streamBubble.textContent = partial;
             chatLog.scrollTop = chatLog.scrollHeight;
           },
         }),
-        new Promise((_, rj) => setTimeout(() => rj(new Error("timeout")), 10000)),
+        new Promise((_, rj) => setTimeout(() => rj(new Error("timeout")), 30000)),
       ]);
       if (fullAnswer) {
         entry.answer = fullAnswer;
@@ -1793,8 +1836,12 @@ async function askQuestion(key, customText = "") {
       }
     } catch (e) {
       console.info("Ollama stream fallback:", e.message);
+      if (streamBubble) streamBubble.classList.remove("thinking");
       try {
-        const fb = await callOllamaPatient({ question, matchedKey, profile, caseText: caseInput.value });
+        const fb = await Promise.race([
+          callOllamaPatient({ question, matchedKey, profile, caseText: caseInput.value }),
+          new Promise((_, rj) => setTimeout(() => rj(new Error("fallback-timeout")), 15000)),
+        ]);
         if (fb) { entry.answer = fb; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
       } catch (_) {}
       if (entry.source === "pending") {
