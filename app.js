@@ -13,27 +13,27 @@ const samples = {
       name: "病例A · 复发风险训练患者",
       intro: "患者感觉最近肠胃又不太对劲，说话会比较生活化，需要学生把口语信息转成医学线索。",
       responses: {
-        overview: "主要是这几天跑厕所多了，肚子也不舒服，有时候便里还能看到红的和黏黏的东西。",
-        stool: "这几天跑厕所明显多了，一天差不多四五次，而且都比较稀。",
-        blood: "有时候纸上或者便里能看到红的，还有黏黏的东西，我看着挺害怕的。",
-        pain: "肚子会一阵一阵疼，老觉得想上厕所，但去了又排不干净。",
-        night: "晚上偶尔也会被憋醒想去厕所，所以睡得不太踏实。",
-        medication: "前阵子我觉得好些了，就自己停了几天那个肠炎药，好像叫美沙拉嗪。",
-        exam: "最近还没去复查，也没做肠镜。医生以前说过有个大便炎症指标，我这次还没查。",
-        appetite: "这几天胃口一般，吃一点就不太想吃，饭量比平时少一些，人也有点没劲。",
-        fatigue: "有，这几天明显没什么力气，走一会儿就觉得累，也不太想动。",
-        fever: "没有明显高烧，体温也没认真量过，就是觉得人有点发虚。",
-        weight: "体重没有特意称，但这几天吃得少，感觉人轻了一点。",
-        systemic: "没有明显高烧；乏力是有的，胃口也差一点。体重我没仔细称，只觉得最近人有点虚。",
-        duration: "大概是最近一周变明显的，前面只是偶尔不舒服，这几天跑厕所多了才有点担心。",
-        giOther: "不太恶心，也没有明显呕吐，主要还是肚子疼、老想上厕所和便里有黏黏红红的东西。",
-        dietTrigger: "没特别吃坏东西，辛辣和凉的吃了会更不舒服，所以这几天我都吃得比较清淡。",
-        dailyLife: "有影响，主要是总想跑厕所，出门或者上课开会的时候会担心来不及。",
-        extraIntestinal: "关节没有特别疼，口腔也没长溃疡。主要还是肠道这些症状。",
-        pastHistory: "以前也犯过，医生说是溃疡性结肠炎，之前吃药后能压下去。",
-        familyHistory: "家里人好像没有类似肠炎病史，我也不太确定。",
-        tongue: "我自己看舌头有点红，舌苔有点厚。脉象这个我就不太懂，是医生写的。",
-        fallback: "这个我一下说不清。你可以换个更具体的问法，比如问大便、肚子痛、吃饭胃口、睡眠、用药或最近复查。",
+        overview: "最近老跑厕所，一天好几次。",
+        stool: "一天跑四五趟，都是稀的。",
+        blood: "有时候能看到点红的。",
+        pain: "会一阵一阵地疼。",
+        night: "晚上有时候被憋醒要上厕所。",
+        medication: "前阵子自己停了几天那个药。",
+        exam: "最近还没去复查，也没查指标。",
+        appetite: "这几天不太想吃东西。",
+        fatigue: "没什么力气，容易累。",
+        fever: "没有明显发烧。",
+        weight: "没特意称，感觉轻了点。",
+        systemic: "就是人没什么劲。",
+        duration: "大概最近一周才明显的。",
+        giOther: "不恶心也不吐，主要就是肚子不舒服。",
+        dietTrigger: "吃辣的凉的会更不舒服。",
+        dailyLife: "出门总怕来不及找厕所。",
+        extraIntestinal: "关节和口腔没什么问题。",
+        pastHistory: "以前犯过，吃药后压下去了。",
+        familyHistory: "家里人好像没有类似的。",
+        tongue: "舌头有点红，舌苔有点厚。",
+        fallback: "嗯……就是肚子那块不太舒服吧，你想了解哪方面？",
       },
     },
   },
@@ -44,27 +44,27 @@ const samples = {
       name: "病例B · 稳定随访训练患者",
       intro: "患者目前自觉比较稳定，适合训练学生确认低风险依据，而不是直接结束问诊。",
       responses: {
-        overview: "最近其实还算平稳，没有特别难受，就是来复查时想确认还要不要继续这么管理。",
+        overview: "最近还算平稳，来复查确认一下。",
         stool: "最近基本一天一次，大便形状还可以，不怎么稀。",
         blood: "没看到血，也没有那种黏黏的东西。",
         pain: "肚子不疼，也没有总想上厕所却排不出来的感觉。",
         night: "晚上不会因为想上厕所醒来，睡觉还可以。",
         medication: "药我都按医生说的吃，没有自己停过。",
         exam: "最近复查医生说还算稳定，让我继续按时吃药、按时随访。",
-        appetite: "吃饭还可以，胃口和平时差不多，饭量也没有明显减少。",
-        fatigue: "没有明显乏力，精神和平时差不多，日常活动不太受影响。",
+        appetite: "吃饭还可以，胃口和平时差不多。",
+        fatigue: "没有明显乏力，精神还行。",
         fever: "没有发烧，也没有低热。",
         weight: "体重没怎么变，衣服松紧也和平时差不多。",
-        systemic: "没有发热，也没有明显乏力，体重基本没变化。",
+        systemic: "整体还好，没什么特别的。",
         duration: "这段时间都比较稳定，没有突然加重。主要是按医嘱来随访。",
-        giOther: "没有恶心呕吐，也没有明显胃疼，肚子整体还算舒服。",
+        giOther: "没有恶心呕吐，肚子还算舒服。",
         dietTrigger: "正常吃饭一般没问题，我会少吃太辣太油的东西。",
         dailyLife: "基本不影响生活和学习，主要就是按时吃药、定期复查。",
         extraIntestinal: "没有明显关节痛、口腔溃疡或者皮疹。",
         pastHistory: "以前发作过，但这阵子控制得还可以。",
         familyHistory: "家里没有听说有人得类似的肠道病。",
         tongue: "医生看过说舌头还可以，舌苔不厚。脉象我自己说不上来。",
-        fallback: "目前真没什么特别难受的。你可以具体问大便、便血、肚子痛、吃饭、睡眠、用药或复查情况。",
+        fallback: "总体还行吧，你想了解哪方面？",
       },
     },
   },
@@ -303,6 +303,58 @@ const samples = {
   },
 };
 
+// 患者背景时间线约束：防止 Ollama 编造与病例矛盾的时间/事实细节
+const patientTimeline = {
+  high: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来门诊复诊的
+- 最近这一周肚子变严重了（跑厕所多了、有血和黏液）
+- 前阵子觉得好点了，自己停了几天肠炎药（美沙拉嗪），大概一周前停的
+- 你以前确诊过溃疡性结肠炎，之前吃药能压住
+- 你没有发烧，但是觉得没力气、胃口不好、睡不太好`,
+  low: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来常规复查/随访的
+- 最近症状比较稳定，没有明显不舒服
+- 药一直按医生说的吃，没有自己停过
+- 大便正常，一天一次，成形的，没有血和黏液
+- 以前有过溃疡性结肠炎，但现在控制得还可以`,
+  boundary: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来门诊看看的，想确认一下要不要调整治疗
+- 这种不舒服断断续续有一阵子了，不是突然加重的
+- 药大多数时候在吃，但偶尔忙起来会忘一两次
+- 你自己也说不太清症状到底有多严重
+- 最近没做过肠镜和相关检查`,
+  dampHeat: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来门诊看的
+- 差不多五六天前开始不舒服，吃辣以后更明显
+- 药一直按时吃（美沙拉嗪），没有自己停
+- 最近压力大，没有去复查粪钙卫蛋白
+- 以前有过溃疡性结肠炎`,
+  spleenDef: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来复诊的
+- 肠胃不太稳定的情况持续了差不多一个月
+- 药按医生说的在吃，没有自己停
+- 主要是累了以后症状更明显
+- 不是急性加重，是慢慢拖的`,
+  coldHeat: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来门诊看的
+- 肚子反反复复不舒服有两三周了
+- 最近药吃得不太规律，忙起来会忘
+- 受凉会加重，但肛门又有时候觉得热
+- 以前有过UC发作`,
+  chestPain: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来看急诊/门诊的，因为2小时前胸痛又发作了而且比之前重
+- 胸闷痛反复有一周了，爬坡快走时容易犯
+- 你有高血压十年了，抽烟二十多年
+- 今天含了硝酸甘油有点缓解但没完全好
+- 你55岁，男性`,
+  hypoglycemia: `【你的固定背景事实——必须严格遵守，不得编造】
+- 你今天是来门诊复诊的
+- 昨天下午出现过一次低血糖（手抖、出冷汗、头晕）
+- 你有糖尿病十年了，打胰岛素，也有高血压
+- 今天早上空腹血糖9.5，可能跟昨天低血糖后吃多了有关
+- 你现在没有不舒服，就是有点后怕`,
+};
+
 const keywordRules = [
   { key: "mucusBlood", label: "黏液脓血便", pattern: /黏液脓血|粘液脓血|脓血便|血便|便血/, score: 24, meaning: "动性肠道炎症线索，需要学生重点识别" },
   { key: "abdominalPain", label: "腹痛", pattern: /腹痛|腹部痛|下腹痛|脐周痛/, score: 14, meaning: "示症状活动，需结合频次和持续时间" },
@@ -339,45 +391,45 @@ const keywordRules = [
 ];
 
 const interviewQuestions = [
-  { key: "overview", label: "诉概述", required: false, question: "今天主要哪里不舒服？" },
-  { key: "stool", label: "便频次", required: true, question: "最近大便次数和性状怎么样？" },
+  { key: "overview", label: "主诉概述", required: false, question: "今天主要哪里不舒服？" },
+  { key: "stool", label: "排便频次", required: true, question: "最近大便次数和性状怎么样？" },
   { key: "blood", label: "黏液脓血", required: true, question: "有没有黏液脓血或便血？" },
-  { key: "pain", label: "痛/里急后重", required: true, question: "有没有腹痛或里急后重？" },
-  { key: "night", label: "间症状", required: true, question: "夜间是否会因为便意醒来？" },
-  { key: "medication", label: "药依从性", required: true, question: "近期用药是否规律，有没有停药或漏服？" },
-  { key: "exam", label: "查指标", required: true, question: "最近有没有粪钙卫蛋白、CRP或内镜结果？" },
-  { key: "appetite", label: "欲/纳食", required: false, question: "最近吃饭和胃口怎么样？" },
-  { key: "fatigue", label: "力精神", required: false, question: "最近有没有乏力、没劲或精神变差？" },
-  { key: "fever", label: "热", required: false, question: "最近有没有发热或低热？" },
-  { key: "weight", label: "重变化", required: false, question: "最近体重有没有明显下降？" },
-  { key: "systemic", label: "身情况", required: false, question: "有没有发热、乏力或体重下降这些全身变化？" },
-  { key: "duration", label: "程变化", required: false, question: "这些不舒服大概持续多久了？" },
-  { key: "giOther", label: "随胃肠症状", required: false, question: "有没有恶心、呕吐、腹胀这些情况？" },
-  { key: "dietTrigger", label: "食诱因", required: false, question: "最近饮食有没有诱发或加重不舒服？" },
-  { key: "dailyLife", label: "活影响", required: false, question: "这些症状对学习、工作或出门有没有影响？" },
-  { key: "extraIntestinal", label: "外表现", required: false, question: "有没有关节痛、口腔溃疡或皮疹？" },
-  { key: "pastHistory", label: "往发作", required: false, question: "以前有没有类似发作或诊断记录？" },
-  { key: "familyHistory", label: "族史", required: false, question: "家里有没有类似肠道疾病的人？" },
+  { key: "pain", label: "腹痛/里急后重", required: true, question: "有没有腹痛或里急后重？" },
+  { key: "night", label: "夜间症状", required: true, question: "夜间是否会因为便意醒来？" },
+  { key: "medication", label: "用药依从性", required: true, question: "近期用药是否规律，有没有停药或漏服？" },
+  { key: "exam", label: "检查指标", required: true, question: "最近有没有粪钙卫蛋白、CRP或内镜结果？" },
+  { key: "appetite", label: "食欲/纳食", required: false, question: "最近吃饭和胃口怎么样？" },
+  { key: "fatigue", label: "乏力精神", required: false, question: "最近有没有乏力、没劲或精神变差？" },
+  { key: "fever", label: "发热", required: false, question: "最近有没有发热或低热？" },
+  { key: "weight", label: "体重变化", required: false, question: "最近体重有没有明显下降？" },
+  { key: "systemic", label: "全身情况", required: false, question: "有没有发热、乏力或体重下降这些全身变化？" },
+  { key: "duration", label: "病程变化", required: false, question: "这些不舒服大概持续多久了？" },
+  { key: "giOther", label: "伴随胃肠症状", required: false, question: "有没有恶心、呕吐、腹胀这些情况？" },
+  { key: "dietTrigger", label: "饮食诱因", required: false, question: "最近饮食有没有诱发或加重不舒服？" },
+  { key: "dailyLife", label: "生活影响", required: false, question: "这些症状对学习、工作或出门有没有影响？" },
+  { key: "extraIntestinal", label: "肠外表现", required: false, question: "有没有关节痛、口腔溃疡或皮疹？" },
+  { key: "pastHistory", label: "既往发作", required: false, question: "以前有没有类似发作或诊断记录？" },
+  { key: "familyHistory", label: "家族史", required: false, question: "家里有没有类似肠道疾病的人？" },
   { key: "tongue", label: "舌脉信息", required: false, question: "舌象和脉象有没有记录？" },
   // 胸痛鉴别
-  { key: "painLocation", label: "痛位置", required: true, question: "胸痛具体在哪个位置？是胸骨后还是心前区？" },
-  { key: "painQuality", label: "痛性质", required: true, question: "胸痛是什么性质的？压榨感、闷痛、刺痛还是刀割样？" },
-  { key: "painRadiation", label: "射部位", required: true, question: "胸痛有没有往左肩、左臂、脖子或下颌等地方放射？" },
-  { key: "painDuration", label: "续时间", required: true, question: "每次胸痛大概持续多久？是几分钟还是更长？" },
-  { key: "triggerRelief", label: "因/缓解", required: true, question: "什么情况下会诱发胸痛？休息或含硝酸甘油能缓解吗？" },
-  { key: "riskFactors", label: "血管危险因素", required: true, question: "有没有高血压、糖尿病、高血脂？抽烟吗？家里有人得过心脏病吗？" },
+  { key: "painLocation", label: "疼痛位置", required: true, question: "胸痛具体在哪个位置？是胸骨后还是心前区？" },
+  { key: "painQuality", label: "疼痛性质", required: true, question: "胸痛是什么性质的？压榨感、闷痛、刺痛还是刀割样？" },
+  { key: "painRadiation", label: "放射部位", required: true, question: "胸痛有没有往左肩、左臂、脖子或下颌等地方放射？" },
+  { key: "painDuration", label: "持续时间", required: true, question: "每次胸痛大概持续多久？是几分钟还是更长？" },
+  { key: "triggerRelief", label: "诱因/缓解", required: true, question: "什么情况下会诱发胸痛？休息或含硝酸甘油能缓解吗？" },
+  { key: "riskFactors", label: "心血管危险因素", required: true, question: "有没有高血压、糖尿病、高血脂？抽烟吗？家里有人得过心脏病吗？" },
   // 慢性咳嗽
-  { key: "coughDuration", label: "嗽病程", required: true, question: "咳嗽多久了？是持续性还是反复发作？" },
-  { key: "sputum", label: "液情况", required: true, question: "咳嗽有痰吗？痰是什么颜色和性状？" },
-  { key: "triggers", label: "发因素", required: true, question: "什么情况下咳嗽会加重？冷空气、运动、油烟或说话多会诱发吗？" },
-  { key: "allergy", label: "敏史", required: true, question: "有没有过敏性鼻炎、哮喘或皮肤过敏史？家族里有人过敏吗？" },
-  { key: "smoking", label: "烟史", required: true, question: "抽烟吗？或者经常接触二手烟？" },
+  { key: "coughDuration", label: "咳嗽病程", required: true, question: "咳嗽多久了？是持续性还是反复发作？" },
+  { key: "sputum", label: "痰液情况", required: true, question: "咳嗽有痰吗？痰是什么颜色和性状？" },
+  { key: "triggers", label: "诱发因素", required: true, question: "什么情况下咳嗽会加重？冷空气、运动、油烟或说话多会诱发吗？" },
+  { key: "allergy", label: "过敏史", required: true, question: "有没有过敏性鼻炎、哮喘或皮肤过敏史？家族里有人过敏吗？" },
+  { key: "smoking", label: "吸烟史", required: true, question: "抽烟吗？或者经常接触二手烟？" },
   // 低血糖
-  { key: "hypoglycemiaYesterday", label: "血糖事件", required: true, question: "昨天低血糖前后是什么情况？有没有诱因？" },
-  { key: "insulin", label: "岛素方案", required: true, question: "胰岛素是怎么打的？剂量和时间规律吗？" },
-  { key: "breakfast", label: "食情况", required: true, question: "昨天早饭吃了没有？打针和吃饭时间是怎么安排的？" },
-  { key: "glucoseMonitoring", label: "糖监测", required: true, question: "平时怎么监测血糖？频率是怎样的？" },
-  { key: "hypoglycemiaHistory", label: "血糖史", required: true, question: "以前有没有发生过低血糖？严重到晕倒过吗？" },
+  { key: "hypoglycemiaYesterday", label: "低血糖事件", required: true, question: "昨天低血糖前后是什么情况？有没有诱因？" },
+  { key: "insulin", label: "胰岛素方案", required: true, question: "胰岛素是怎么打的？剂量和时间规律吗？" },
+  { key: "breakfast", label: "进食情况", required: true, question: "昨天早饭吃了没有？打针和吃饭时间是怎么安排的？" },
+  { key: "glucoseMonitoring", label: "血糖监测", required: true, question: "平时怎么监测血糖？频率是怎样的？" },
+  { key: "hypoglycemiaHistory", label: "低血糖史", required: true, question: "以前有没有发生过低血糖？严重到晕倒过吗？" },
 ];
 
 const caseRequiredQuestionMap = {
@@ -952,10 +1004,6 @@ function setRole(role, shouldRoute = false) {
 }
 
 function setRoute(route, options = {}) {
-  /* 考试倒计时清理：导航离开时确保定时器被关闭 */
-  if (state.mode === "exam" && examCountdownTimer) {
-    clearExamCountdownTimer();
-  }
   let nextRoute = route === "home" ? roleHomeRoute[state.role] : route;
   nextRoute = routeMeta[nextRoute] ? nextRoute : roleHomeRoute[state.role];
   if (!options.keepRole) {
@@ -1348,7 +1396,7 @@ async function analyzeCaseWithModel(text) {
         if (ollamaResult) {
           const merged = mergeModelAnalysis(localAnalysis, ollamaResult);
           state.modelApiSource = "ollama";
-          setModelApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+          setModelApiStatus("本地模型已接入", "success");
           return merged;
         }
       } catch (ollamaError) {
@@ -1502,13 +1550,13 @@ function renderInterview() {
       : (state.interview.length ? "pill warn" : "pill neutral");
   }
   if (state.patientApiSource === "ollama") {
-    setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success");
+    setPatientApiStatus("AI患者已接入", "success");
   } else if (state.patientApiSource === "openai") {
     setPatientApiStatus("OpenAI患者API", "success");
   } else if (state.patientApiSource === "error") {
     setPatientApiStatus("API失败·本地兜底", "warn");
-  } else if (OLLAMA_MODEL) {
-    setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "neutral");
+  } else if (OLLAMA_MODEL && !DEMO_MODE) {
+    setPatientApiStatus("AI患者就绪", "neutral");
   } else {
     setPatientApiStatus("本地话术", "neutral");
   }
@@ -1543,7 +1591,7 @@ function appendMessage(role, text) {
 
 function matchQuestionKey(text) {
   // overview: 整体情况/主诉
-  if (/哪里不舒服|哪.*不舒服|怎么不舒服|什么症状|主要症状|哪里难受|最近怎么样|情况怎么样|身体怎么样|肠胃.*(怎么样|如何)|肚子.*(怎么样|如何)|怎么回事|说说.*情况|具体.*(说说|讲讲|描述)|主要.*问题|能.*说说|讲一下|说一下.*情况/.test(text)) return "overview";
+  if (/哪里不舒服|哪.*不舒服|怎么不舒服|有什么.*不舒服|有什么不适|什么症状|主要症状|哪里难受|最近怎么样|最近.*怎么样|感觉怎么样|近来怎么样|情况怎么样|身体怎么样|肠胃.*(怎么样|如何)|肚子.*(怎么样|如何)|怎么回事|^(你)?怎么了|^(你)?咋了|说说.*情况|具体.*(说说|讲讲|描述)|主要.*问题|能.*说说|讲一下|说一下.*情况/.test(text)) return "overview";
   // stool: 大便次数/性状
   if (/大便|排便|拉肚子|拉稀|拉.*(几次|多少|什么样|怎样)|便(便|秘)|次数|屎|性状|成形|不成形|稀(便|烂)|(一天|每天).*(几次|多少)|腹泻|窜稀|拉(的|得).*(多|少|稀|稠|什么样)/.test(text)) return "stool";
   // blood: 脓血/黏液
@@ -1648,18 +1696,19 @@ function isGreeting(text) {
 
 async function callOllamaPatient({ question, matchedKey, profile, caseText }) {
   if (isGreeting(question)) return "你好，医生。";
-  const interviewLog = state.interview.slice(-10).map((item) =>
+  const interviewLog = state.interview.slice(-5).map((item) =>
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
   const patientCaseText = convertToPatientSpeak(caseText);
-  const systemPrompt = `你扮演一个在医院看病的患者，只用大白话回答医生的问题。每次回答不超过15个字。`;
+  const timeline = patientTimeline[state.activeCase] || "";
+  const systemPrompt = `你是门诊患者，回答规则：25字以内；只答一个方面；严格按背景事实答，不编造；不知道说"不记得"。说生活化的具体感受，别概括总结。禁用术语：黏液→黏糊糊的/像鼻涕；脓血/便血→带血/红的；腹泻→拉肚子；排便→上厕所；症状加重→比上次厉害。
+${timeline}`;
 
-  const prompt = `示例对话：
-医生：你好 → 患者：你好
-医生：哪里不舒服 → 患者：拉肚子，肚子疼
-医生：大便怎么样 → 患者：一天四五次，稀的带血
-医生：肚子疼吗 → 患者：疼，一阵一阵的
+  const prompt = `示例：
+医生：哪里不舒服→患者：最近老跑厕所
+医生：大便怎么样→患者：稀的，还带点红
+医生：最近怎么样→患者：比上礼拜厉害了
 
 [你的情况] ${patientCaseText}
 
@@ -1676,15 +1725,22 @@ ${interviewLog ? `之前的对话：\n${interviewLog}\n\n` : ""}医生：${quest
       stream: false,
       options: {
         num_predict: 40,
-        temperature: 0.7,
+        temperature: 0.6,
         repeat_penalty: 1.2,
+        stop: ["\n", "医生：", "患者："],
       },
     }),
   });
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
   const data = await response.json();
-  const answer = (data.response || "").trim();
+  let answer = (data.response || "").trim();
   if (!answer) throw new Error("Ollama returned empty response");
+  // 兜底裁剪：若模型未遵守长度约束，截断到首句且不超过25个汉字
+  answer = answer.split(/[\n医生：患者：]/)[0].trim();
+  if (answer.length > 25) {
+    const m = answer.match(/^[\s\S]{1,25}?[，。,.！？!?]/);
+    answer = (m ? m[0] : answer.slice(0, 25)).replace(/[，,]$/, "。");
+  }
   return answer;
 }
 
@@ -1696,18 +1752,19 @@ async function callOllamaPatientStream({ question, matchedKey, profile, caseText
     if (onToken) onToken(greeting);
     return greeting;
   }
-  const interviewLog = state.interview.slice(-10).map((item) =>
+  const interviewLog = state.interview.slice(-5).map((item) =>
     `学生：${item.question}\n患者：${item.answer}`
   ).join("\n");
 
   const patientCaseText = convertToPatientSpeak(caseText);
-  const systemPrompt = `你扮演一个在医院看病的患者，只用大白话回答医生的问题。每次回答不超过15个字。`;
+  const timeline = patientTimeline[state.activeCase] || "";
+  const systemPrompt = `你是门诊患者，回答规则：25字以内；只答一个方面；严格按背景事实答，不编造；不知道说"不记得"。说生活化的具体感受，别概括总结。禁用术语：黏液→黏糊糊的/像鼻涕；脓血/便血→带血/红的；腹泻→拉肚子；排便→上厕所；症状加重→比上次厉害。
+${timeline}`;
 
-  const prompt = `示例对话：
-医生：你好 → 患者：你好
-医生：哪里不舒服 → 患者：拉肚子，肚子疼
-医生：大便怎么样 → 患者：一天四五次，稀的带血
-医生：肚子疼吗 → 患者：疼，一阵一阵的
+  const prompt = `示例：
+医生：哪里不舒服→患者：最近老跑厕所
+医生：大便怎么样→患者：稀的，还带点红
+医生：最近怎么样→患者：比上礼拜厉害了
 
 [你的情况] ${patientCaseText}
 
@@ -1724,8 +1781,9 @@ ${interviewLog ? `之前的对话：\n${interviewLog}\n\n` : ""}医生：${quest
       stream: true,
       options: {
         num_predict: 40,
-        temperature: 0.7,
+        temperature: 0.6,
         repeat_penalty: 1.2,
+        stop: ["\n", "医生：", "患者："],
       },
     }),
   });
@@ -1765,8 +1823,14 @@ ${interviewLog ? `之前的对话：\n${interviewLog}\n\n` : ""}医生：${quest
     } catch (_) {}
   }
 
-  const trimmed = fullAnswer.trim();
+  let trimmed = fullAnswer.trim();
   if (!trimmed) throw new Error("Ollama returned empty response");
+  // 兜底裁剪：若模型未遵守长度约束，截断到首句且不超过25个汉字
+  trimmed = trimmed.split(/[\n医生：患者：]/)[0].trim();
+  if (trimmed.length > 25) {
+    const m = trimmed.match(/^[\s\S]{1,25}?[，。,.！？!?]/);
+    trimmed = (m ? m[0] : trimmed.slice(0, 25)).replace(/[，,]$/, "。");
+  }
   return trimmed;
 }
 
@@ -1798,8 +1862,17 @@ async function askQuestion(key, customText = "") {
   let answer = "";
   let source = "local";
 
-  // 所有问题优先走 Ollama（演示模式跳过远程调用）
-  if (OLLAMA_MODEL && !DEMO_MODE) {
+  // 本地话术优先：匹配到 key 且 profile.responses 中有对应条目时直接使用，不调用 LLM
+  const localAnswer = profile.responses && matchedKey ? profile.responses[matchedKey] : null;
+
+  if (localAnswer) {
+    // 命中本地话术：快速、准确、一致，直接返回，不走 Ollama
+    answer = localAnswer;
+    source = "local";
+    state.patientApiSource = "local";
+    setPatientApiStatus("本地话术", "success");
+  } else if (OLLAMA_MODEL && !DEMO_MODE) {
+    // 没有本地话术（matchedKey 为 null 或 responses 中无对应条目），交给 Ollama 处理自由追问
     // 流式输出（带超时降级）
     setPatientApiStatus("Ollama回答中", "warn");
     const entry = { key: matchedKey, label: prompt ? prompt.label : "自定义追问", question, answer: "正在思考中...", source: "pending" };
@@ -1845,7 +1918,8 @@ async function askQuestion(key, customText = "") {
         if (fb) { entry.answer = fb; entry.source = "ollama"; state.patientApiSource = "ollama"; setPatientApiStatus(`Ollama·${OLLAMA_MODEL}`, "success"); }
       } catch (_) {}
       if (entry.source === "pending") {
-        entry.answer = "抱歉，我现在不太舒服，能再问一遍吗？";
+        // Ollama不可用时使用兜底话术（此处 localAnswer 必然为空，因为已在前面分支拦截）
+        entry.answer = profile.responses?.fallback || "这个我一下说不清。你可以换个更具体的问法吗？";
         entry.source = "local";
         state.patientApiSource = "local";
         setPatientApiStatus("Ollama不可用·本地兜底", "warn");
@@ -1871,6 +1945,9 @@ async function askQuestion(key, customText = "") {
       console.info("Patient API fallback:", error.message);
     }
   } else {
+    // 最终兜底：既无本地话术，也无可用 LLM/API
+    answer = profile.responses?.fallback || "这个我说不清，你换个问法？";
+    source = "local";
     state.patientApiSource = "local";
   }
 
@@ -2976,6 +3053,23 @@ async function submitJudgement() {
   feedbackStatus.className = "pill warn";
   feedbackStatus.style.opacity = "0.7";
 
+  /* 提交按钮loading状态 */
+  const submitOriginalText = submitJudgementBtn.textContent;
+  const submitWasDisabled = submitJudgementBtn.disabled;
+  submitJudgementBtn.disabled = true;
+  submitJudgementBtn.dataset.loading = "true";
+  submitJudgementBtn.textContent = "正在生成反馈…";
+
+  try {
+    await submitJudgementCore();
+  } finally {
+    submitJudgementBtn.disabled = submitWasDisabled;
+    delete submitJudgementBtn.dataset.loading;
+    submitJudgementBtn.textContent = submitOriginalText;
+  }
+}
+
+async function submitJudgementCore() {
   await renderAnalysis({ force: true });
   if (state.analysis) {
     parseStatus.style.opacity = "";
@@ -3869,7 +3963,7 @@ function loadSample(key) {
   document.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
   parseStatus.textContent = "提交后生成";
   parseStatus.className = "pill neutral";
-  setPatientApiStatus(OLLAMA_MODEL ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
+  setPatientApiStatus(OLLAMA_MODEL && !DEMO_MODE ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
   setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   renderRiskBadge();
   tagCloud.innerHTML = "";
@@ -3912,7 +4006,7 @@ function resetCustomCase() {
   document.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
   parseStatus.textContent = "请输入病例";
   parseStatus.className = "pill warn";
-  setPatientApiStatus(OLLAMA_MODEL ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
+  setPatientApiStatus(OLLAMA_MODEL && !DEMO_MODE ? `Ollama·${OLLAMA_MODEL}` : "本地话术", "neutral");
   setModelApiStatus(REMOTE_UC_MODEL_API_URL ? "已配置远程模型" : "本地规则分层", "neutral");
   tagCloud.innerHTML = "";
   structuredTable.innerHTML = "";
@@ -4197,15 +4291,47 @@ if (publishDraftExamBtn) {
   });
 }
 
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      const ok = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      if (ok) {
+        resolve();
+      } else {
+        reject(new Error("execCommand copy failed"));
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 copyReportBtn.addEventListener("click", async () => {
   try {
-    await navigator.clipboard.writeText(trainingReport.textContent);
+    await copyToClipboard(trainingReport.textContent);
     copyReportBtn.textContent = "已复制";
     setTimeout(() => {
       copyReportBtn.textContent = "复制训练记录";
     }, 1400);
   } catch {
     copyReportBtn.textContent = "复制失败";
+    setTimeout(() => {
+      copyReportBtn.textContent = "复制训练记录";
+    }, 1400);
   }
 });
 
@@ -4628,6 +4754,9 @@ function applyModeHints() {
       setRoute("dashboard");
     });
     startExamCountdown();
+  } else if (isExam && banner) {
+    /* 导航回来时确保倒计时仍在运行 */
+    if (!examCountdownTimer) startExamCountdown();
   } else if (!isExam && banner) {
     clearExamCountdownTimer();
     banner.remove();
@@ -5254,7 +5383,15 @@ function renderReviewForStudent(studentId) {
   const { student, klass } = found;
   if (info) info.textContent = `当前：${klass.name} · ${student.name} · ${student.lastCase}`;
   teacherSessionCount.textContent = `${student.sessions} 次`;
-  teacherAvgScore.textContent = `${student.avg} 分`;
+  // 优先使用学生端 localStorage 中的真实训练记录，避免教师端展示与学生端不同步的演示数据
+  const storedHistory = readStoredHistory();
+  const latestRecord = storedHistory && storedHistory.length > 0 ? storedHistory[0] : null;
+  const hasRealRubric = latestRecord && Array.isArray(latestRecord.rubric) && latestRecord.rubric.length > 0;
+  if (hasRealRubric) {
+    teacherAvgScore.textContent = `${latestRecord.rubricAvg || 0} 分`;
+  } else {
+    teacherAvgScore.textContent = `${student.avg} 分`;
+  }
   teacherFocus.textContent = student.weakness;
   const consistent = student.selected === student.systemLevel;
   const errorTypes = deriveErrorTypes({
@@ -5272,16 +5409,18 @@ function renderReviewForStudent(studentId) {
     `学生判断：${student.selected}`,
     `系统分层：${student.systemLevel}`,
     `累计训练：${student.sessions} 次`,
-    `平均量规：${student.avg} 分`,
+    `平均量规：${hasRealRubric ? latestRecord.rubricAvg || 0 : student.avg} 分`,
     `薄弱点：${student.weakness}`,
     `教师提示：${consistent ? "判断方向一致，可引导学生把推理链条表达得更完整。" : "判断与系统分层不一致，建议围绕证据线索、用药依从性和信息缺失逐条复盘。"}`,
   ].join("\n");
-  const rubricItems = [
-    { label: "病史采集", score: Math.max(60, student.avg - 4) },
-    { label: "临床推理", score: student.avg },
-    { label: "中西医整合", score: Math.max(55, student.avg - 6) },
-    { label: "安全沟通", score: Math.min(95, student.avg + 3) },
-  ];
+  const rubricItems = hasRealRubric
+    ? latestRecord.rubric.map((r) => ({ label: r.label, score: r.score }))
+    : [
+        { label: "病史采集", score: Math.max(60, student.avg - 4) },
+        { label: "临床推理", score: student.avg },
+        { label: "中西医整合", score: Math.max(55, student.avg - 6) },
+        { label: "安全沟通", score: Math.min(95, student.avg + 3) },
+      ];
   teacherRubricList.innerHTML = "";
   rubricItems.forEach((r) => {
     const span = document.createElement("span");
